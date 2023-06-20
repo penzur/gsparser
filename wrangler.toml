@@ -1,0 +1,11 @@
+name = "gsportal-rs"
+main = "build/worker/shim.mjs"
+compatibility_date = "2023-03-22"
+
+# logpush = true
+
+# workers_dev = false
+# route = { pattern = "gs.flyff.page/api/v1/*", zone_name = "flyff.page" }
+
+[build]
+command = "cargo install -q worker-build && worker-build --release"
