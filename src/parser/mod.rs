@@ -9,28 +9,45 @@ struct Entry<'a> {
     target: (&'a str, &'a str),
 }
 
-pub async fn parse(payload: Vec<u8>) {
-    let logs = String::from_utf8(payload.to_vec()).unwrap();
+pub async fn parse(payload: Vec<u8>) -> Result<()> {
+    let logs = String::from_utf8(payload.to_vec())
+        .map_err(|_| worker::Error::RustError("Could not parse payload".to_owned()))?;
     let logs = logs
         .split("\r\n\r\n")
         .map(|x| x.split("\r\n").collect::<Vec<&str>>()[0])
         .collect::<Vec<&str>>();
-    console_log!("logs: {:?}", logs[0]);
 
-    let re = Regex::new(r"\[(.*?)\] (.*?)(\((\d+) grade\)) → Attack \[(.*?)\] (.*)").unwrap();
+    let rx = Regex::new(r"\[(.*?)\] (.*?)(\((\d+) grade\)) → Attack \[(.*?)\] (.*)")
+        .map_err(|_| Error::RustError("Invalid payload format".to_owned()))?;
+
     let entries = logs
         .iter()
         .filter_map(|e| {
-            if let Some(caps) = re.captures(e) {
+            if let Some(caps) = rx.captures(e) {
+                let attacker = (
+                    caps.get(1).map_or("", |m| m.as_str()),
+                    caps.get(2).map_or("", |m| m.as_str()),
+                );
+                let points = caps
+                    .get(4)
+                    .and_then(|m| m.as_str().parse::<u8>().ok())
+                    .unwrap_or_default();
+                let target = (
+                    caps.get(5).map_or("", |m| m.as_str()),
+                    caps.get(6).map_or("", |m| m.as_str()),
+                );
                 Some(Entry {
-                    attacker: (caps.get(1).unwrap().as_str(), caps.get(2).unwrap().as_str()),
-                    points: caps.get(4).unwrap().as_str().parse::<u8>().unwrap(),
-                    target: (caps.get(5).unwrap().as_str(), caps.get(6).unwrap().as_str()),
+                    attacker,
+                    points,
+                    target,
                 })
             } else {
                 None
             }
         })
         .collect::<Vec<Entry>>();
-    console_log!("entries: {:?}", entries)
+
+    console_log!("{:?}", entries);
+
+    Ok(())
 }

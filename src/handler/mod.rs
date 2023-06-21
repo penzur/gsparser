@@ -19,7 +19,7 @@ pub async fn new_log<D>(mut req: Request, _ctx: RouteContext<D>) -> Result<Respo
     };
 
     let payload = file.bytes().await?;
-    parser::parse(payload).await;
+    parser::parse(payload).await?;
 
     Response::from_json(&json!({ "message": "Hello, world"}))
 }
