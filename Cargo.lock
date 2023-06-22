@@ -221,7 +221,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "gsportal-rs"
+name = "gsparser-api"
 version = "0.0.0"
 dependencies = [
  "cfg-if",
