@@ -52,14 +52,23 @@ fn hash_bytes(bytes: &[u8]) -> String {
 
 pub async fn parse_from_bytes(bytes: &[u8]) -> Result<Log> {
     let hash = hash_bytes(&bytes);
+
     let lines = String::from_utf8(bytes.to_vec())
         .map_err(|_| worker::Error::RustError("Could not parse data".to_owned()))?;
+    // since rust regexp does not support lookaheads, then we'll do it the
+    // good ol find-and-replace way XD
     let lines = lines
-        .split("\r\n\r\n")
-        .map(|x| x.split("\r\n").collect::<Vec<&str>>()[0])
+        .replace("→ ", "")
+        .replace("?? ", "")
+        .replace("Guild Master ", "")
+        .replace("Defender ", "")
+        .replace("\r", "");
+    let lines = lines
+        .split("\n\n")
+        .map(|x| x.split("\n").collect::<Vec<&str>>()[0])
         .collect::<Vec<&str>>();
 
-    let rx = Regex::new(r"\[(.*?)\] (.*?)(\((\d+) grade\)) → Attack \[(.*?)\] (.*)")
+    let rx = Regex::new(r"\[(.*?)\] (.*?)(\((\d+) grade\)) Attack \[(.*?)\] (.*)")
         .map_err(|_| Error::RustError("Invalid data format".to_owned()))?;
 
     let entries = lines
@@ -68,10 +77,7 @@ pub async fn parse_from_bytes(bytes: &[u8]) -> Result<Log> {
             if let Some(caps) = rx.captures(e) {
                 let attacker = PlayerEntity {
                     guild: caps.get(1).map_or("", |m| m.as_str()).to_string(),
-                    name: caps
-                        .get(2)
-                        .map_or("", |m| m.as_str())
-                        .replace("Guild Master ", ""),
+                    name: caps.get(2).map_or("", |m| m.as_str()).to_owned(),
                 };
                 let points = caps
                     .get(4)
@@ -79,10 +85,7 @@ pub async fn parse_from_bytes(bytes: &[u8]) -> Result<Log> {
                     .unwrap_or_default();
                 let target = PlayerEntity {
                     guild: caps.get(5).map_or("", |m| m.as_str()).to_string(),
-                    name: caps
-                        .get(6)
-                        .map_or("", |m| m.as_str())
-                        .replace("Defender ", ""),
+                    name: caps.get(6).map_or("", |m| m.as_str()).to_owned(),
                 };
                 Some(Record {
                     attacker,
