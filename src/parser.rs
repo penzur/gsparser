@@ -95,6 +95,10 @@ pub async fn parse_from_bytes(bytes: &[u8]) -> Result<Log> {
         })
         .collect::<Vec<Record>>();
 
+    if entries.is_empty() {
+        return Err(Error::RustError("Invalid data format".to_owned()));
+    }
+
     let mut guild_map = HashMap::new();
     let mut player_map = HashMap::new();
 
