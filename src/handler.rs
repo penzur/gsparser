@@ -18,8 +18,8 @@ pub async fn new_log<D>(mut req: Request, _ctx: RouteContext<D>) -> Result<Respo
         _ => return Response::error("file not found", 400),
     };
 
-    let payload = file.bytes().await?;
-    parser::parse(payload).await?;
+    let data = file.bytes().await?;
+    let log = parser::parse_from_bytes(&data).await?;
 
-    Response::from_json(&json!({ "message": "Hello, world"}))
+    Response::from_json(&json!(log))
 }
