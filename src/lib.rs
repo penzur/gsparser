@@ -1,4 +1,3 @@
-use std::borrow::Borrow;
 use utils::logit;
 use worker::*;
 
@@ -14,35 +13,35 @@ pub async fn main(req: Request, env: Env, _ctx: worker::Context) -> Result<Respo
         Some(ip) => ip,
         None => "127.0.0.1".to_string(),
     };
-    let method = &req.method().to_string();
-    let path = &req.path().to_string();
+    let method = req.method().to_string();
+    let path = req.path().to_string();
+    let key = req.url()?.to_string();
 
     // check if cache exists
     let c = Cache::default();
     if method == "GET" {
-        if let Some(cache_resp) = c.get(&req, true).await.ok().flatten() {
+        if let Some(cache_resp) = c.get(&key, true).await.ok().flatten() {
             let code = cache_resp.status_code();
             let size = match cache_resp.body() {
                 ResponseBody::Body(b) => b.len(),
                 _ => 0,
             };
 
-            logit(ip.as_str(), method, path, code, size, now.as_millis());
+            logit(ip.as_str(), &method, &path, code, size, now.as_millis());
             return Ok(cache_resp);
         }
     }
 
-    let reqc = req.clone()?;
     let router = Router::new();
     let result = router
         .get("/api/v1", |_req, _ctx| Response::ok("API is up!"))
         .get_async("/api/v1/logs", handler::logs)
         .post_async("/api/v1/logs", handler::new_log)
-        .run(reqc, env)
+        .run(req, env)
         .await;
 
-    let resp = match result {
-        Ok(resp) => resp,
+    let mut resp = match result {
+        Ok(rsp) => rsp,
         Err(_) => return Response::error("request failed", 400),
     };
 
@@ -52,25 +51,30 @@ pub async fn main(req: Request, env: Env, _ctx: worker::Context) -> Result<Respo
         _ => 0,
     };
 
-    logit(ip.as_str(), method, path, code, size, now.as_millis());
+    logit(ip.as_str(), &method, &path, code, size, now.as_millis());
 
-    // cache headers
-    let mut headers = Headers::new();
-    headers.set("Content-Type", "application/json").ok();
-    let mut resp = resp.with_headers(headers);
+    resp.headers_mut()
+        .set("Content-Type", "application/json; charset=utf-8")
+        .ok();
 
-    // no need to cache for none-GET method
     if method != "GET" {
         return Ok(resp);
     }
 
-    // cache me baby one more time!
-    resp.headers_mut()
-        .set("Cache-Control", "public, s-max-age=31536000")
-        .ok();
-    let k = &req.borrow();
-    if let Some(resp) = resp.cloned().ok() {
-        c.put(*k, resp).await.ok();
+    let result = match resp.body() {
+        ResponseBody::Body(b) => Response::from_bytes(b.to_owned()),
+        _ => return Ok(resp),
+    };
+    if let Ok(mut cache_resp) = result {
+        cache_resp
+            .headers_mut()
+            .set("Content-Type", "application/json; charset=utf-8")
+            .ok();
+        cache_resp
+            .headers_mut()
+            .set("Cache-Control", "public, max-age=86400")
+            .ok();
+        c.put(&key, cache_resp).await.ok();
     }
 
     Ok(resp)
