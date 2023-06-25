@@ -5,7 +5,7 @@ mod handler;
 mod parser;
 mod utils;
 
-#[event(fetch)]
+#[event(fetch, respond_with_errors)]
 pub async fn main(req: Request, env: Env, _ctx: worker::Context) -> Result<Response> {
     let now = Date::now();
     utils::set_panic_hook();

@@ -1,5 +1,4 @@
 use serde::Serialize;
-use sha2::{Digest, Sha256};
 use std::collections::HashMap;
 
 use regex::Regex;
@@ -40,19 +39,9 @@ pub struct Player {
 pub struct Log {
     pub guilds: Vec<Guild>,
     pub players: Vec<Player>,
-    pub hash: String,
-}
-
-fn hash_bytes(bytes: &[u8]) -> String {
-    let mut hasher = Sha256::new();
-    hasher.update(bytes);
-    let result = hasher.finalize();
-    format!("{:x}", result)
 }
 
 pub async fn parse_from_bytes(bytes: &[u8]) -> Result<Log> {
-    let hash = hash_bytes(&bytes);
-
     let lines = String::from_utf8(bytes.to_vec())
         .map_err(|_| worker::Error::RustError("Could not parse data".to_owned()))?;
     // since rust regexp does not support lookaheads, then we'll do it the
@@ -76,16 +65,16 @@ pub async fn parse_from_bytes(bytes: &[u8]) -> Result<Log> {
         .filter_map(|e| {
             if let Some(caps) = rx.captures(e) {
                 let attacker = PlayerEntity {
-                    guild: caps.get(1).map_or("", |m| m.as_str()).to_string(),
-                    name: caps.get(2).map_or("", |m| m.as_str()).to_owned(),
+                    guild: caps.get(1).map_or("", |m| m.as_str()).trim().to_string(),
+                    name: caps.get(2).map_or("", |m| m.as_str()).trim().to_owned(),
                 };
                 let points = caps
                     .get(4)
                     .and_then(|m| m.as_str().parse::<u8>().ok())
                     .unwrap_or_default();
                 let target = PlayerEntity {
-                    guild: caps.get(5).map_or("", |m| m.as_str()).to_string(),
-                    name: caps.get(6).map_or("", |m| m.as_str()).to_owned(),
+                    guild: caps.get(5).map_or("", |m| m.as_str()).trim().to_string(),
+                    name: caps.get(6).map_or("", |m| m.as_str()).trim().to_owned(),
                 };
                 Some(Record {
                     attacker,
@@ -180,9 +169,5 @@ pub async fn parse_from_bytes(bytes: &[u8]) -> Result<Log> {
         .collect::<Vec<Guild>>();
     guilds.sort_by(|a, b| b.points.cmp(&a.points));
 
-    Ok(Log {
-        guilds,
-        players,
-        hash,
-    })
+    Ok(Log { guilds, players })
 }

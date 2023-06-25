@@ -1,4 +1,5 @@
 use cfg_if::cfg_if;
+use sha2::{Digest, Sha256};
 use worker::*;
 
 cfg_if! {
@@ -23,4 +24,11 @@ pub fn logit(ip: &str, method: &str, path: &str, code: u16, size: usize, start_t
         size,
         Date::now().as_millis() - start_time,
     );
+}
+
+pub fn hash_bytes(bytes: &[u8]) -> String {
+    let mut hasher = Sha256::new();
+    hasher.update(bytes);
+    let result = hasher.finalize();
+    format!("{:x}", result)
 }

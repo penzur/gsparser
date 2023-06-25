@@ -8,4 +8,4 @@ compatibility_date = "2023-03-22"
 # route = { pattern = "gs.flyff.page/api/v1/*", zone_name = "flyff.page" }
 
 [build]
-command = "cargo install -q worker-build && worker-build --release"
+command = "cargo install --git https://github.com/cloudflare/workers-rs.git worker-build && worker-build --release"
