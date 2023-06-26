@@ -6,6 +6,10 @@ compatibility_date = "2023-03-22"
 
 # workers_dev = false
 # route = { pattern = "gs.flyff.page/api/v1/*", zone_name = "flyff.page" }
+[[d1_databases]]
+binding = "siegelogs"
+database_name = "siegelogs"
+database_id = "9d9a4df9-9656-4db3-a403-de3d4845a58a"
 
 [build]
 command = "cargo install --git https://github.com/cloudflare/workers-rs.git worker-build && worker-build --release"

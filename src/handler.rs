@@ -42,9 +42,13 @@ pub async fn new_log<D>(mut req: Request, ctx: RouteContext<D>) -> Result<Respon
     let data = &file.bytes().await?;
     let hash = hash_bytes(&data);
     let log = parser::parse_from_bytes(&data).await?;
-    console_log!("before d1");
-    let d1 = ctx.env.d1("DB")?;
-    console_log!("after 1");
+    let d1 = match ctx.d1("siegelogs") {
+        Ok(d) => d,
+        Err(e) => {
+            console_log!("d1 err: {:?}", e);
+            return Response::error("Request failed", 400);
+        }
+    };
     let query = d1
         .prepare(
             "INSERT INTO logs (server, date, hash, guilds, players) VALUES (?1, ?2, ?3, ?4, ?5)",
@@ -56,11 +60,14 @@ pub async fn new_log<D>(mut req: Request, ctx: RouteContext<D>) -> Result<Respon
             JsValue::from_str(json!(log.guilds).as_str().unwrap_or("")),
             JsValue::from_str(json!(log.players).as_str().unwrap_or("")),
         ])?;
-    let result = query.run().await?;
-    if let Some(err) = result.error() {
-        console_log!("Error: {:?}", err);
-        return Response::error("Request failed", 400);
-    }
+    let result = match query.run().await {
+        Ok(r) => r,
+        Err(e) => {
+            console_log!("query err: {:?}", e);
+            return Response::error("Request failed", 400);
+        }
+    };
+    console_log!("result: {:?}", result.error());
 
     Response::from_json(&json!({
         "server": "aegis-flyff",
