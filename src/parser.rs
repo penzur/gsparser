@@ -1,10 +1,10 @@
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
 use regex::Regex;
 use worker::*;
 
-#[derive(Debug, Clone, Serialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 struct PlayerEntity {
     guild: String,
     name: String,
@@ -17,7 +17,7 @@ struct Record {
     target: PlayerEntity,
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct Guild {
     name: String,
     points: u32,
@@ -25,7 +25,7 @@ pub struct Guild {
     members: Vec<String>,
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct Player {
     name: String,
     guild: String,

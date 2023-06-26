@@ -1,14 +1,77 @@
+use serde::{Deserialize, Serialize};
 use serde_json::json;
+use std::collections::HashMap;
 use worker::{js_sys::Date, wasm_bindgen::JsValue, *};
 
-use crate::{parser, utils::hash_bytes};
+use crate::{
+    parser::{self, Guild, Player},
+    utils::hash_bytes,
+};
 
-pub async fn logs<D>(_req: Request, _ctx: RouteContext<D>) -> Result<Response> {
-    Response::from_json(&json!({ "message": "Hello, world!"}))
+#[derive(Debug, Deserialize, Serialize)]
+struct LogResult {
+    server: String,
+    date: i64,
+    guilds: Vec<Guild>,
+    players: Vec<Player>,
+}
+type Results = Vec<LogResult>;
+
+pub async fn logs<D>(req: Request, ctx: RouteContext<D>) -> Result<Response> {
+    // get query string first
+    let url = match req.url() {
+        Ok(q) => q,
+        Err(_) => return Response::error("query string required", 400),
+    };
+
+    // convert to hashmap
+    let queries = url.query_pairs().into_iter().collect::<HashMap<_, _>>();
+    let server = queries.get("server").ok_or("")?;
+
+    // d1 bindings
+    let d1 = match ctx.d1("siegelogs") {
+        Ok(d) => d,
+        Err(e) => {
+            console_log!("d1 err: {:?}", e);
+            return Response::error("request failed", 400);
+        }
+    };
+
+    // prepare query
+    let stmt = d1
+        .prepare(
+            r#"
+                SELECT server, date, guilds, players
+                FROM logs
+                WHERE COALESCE(server = ?1, 1)
+                ORDER BY date DESC
+            "#,
+        )
+        .bind(&[JsValue::from_str(&server.as_ref())])?;
+
+    let result = stmt.all().await.map_err(|e| {
+        console_log!("query err: {:?}", e);
+        "request failed"
+    })?;
+    console_log!("result!");
+
+    if !result.success() {
+        return Response::error("request failed", 400);
+    }
+    console_log!("success!");
+
+    // convert to json
+    let results: Results = result.results::<LogResult>()?;
+
+    Response::from_json(&json!({ "results": results }))
 }
 
 pub async fn new_log<D>(mut req: Request, ctx: RouteContext<D>) -> Result<Response> {
     let form = req.form_data().await?;
+    let server = match form.get("server") {
+        Some(FormEntry::Field(s)) => s,
+        _ => return Response::error("server is required", 400),
+    };
     let file = match form.get("file").ok_or("file not found") {
         Ok(file) => file,
         _ => return Response::error("file not found", 400),
@@ -39,38 +102,57 @@ pub async fn new_log<D>(mut req: Request, ctx: RouteContext<D>) -> Result<Respon
         }
     };
 
-    let data = &file.bytes().await?;
+    // parse file
+    let data = &file.bytes().await.map_err(|_| "invalid file format")?;
     let hash = hash_bytes(&data);
     let log = parser::parse_from_bytes(&data).await?;
+
+    // d1 bindings
     let d1 = match ctx.d1("siegelogs") {
         Ok(d) => d,
         Err(e) => {
             console_log!("d1 err: {:?}", e);
-            return Response::error("Request failed", 400);
+            return Response::error("request failed", 400);
         }
     };
+
     let query = d1
         .prepare(
-            "INSERT INTO logs (server, date, hash, guilds, players) VALUES (?1, ?2, ?3, ?4, ?5)",
+            r#"
+                INSERT INTO logs (server, date, hash, guilds, players)
+                VALUES (?1, ?2, ?3, ?4, ?5)
+            "#,
         )
         .bind(&[
-            "aegis-flyff".into(),
+            server.clone().into(),
             date.into(),
-            JsValue::from_str(hash.as_str()),
-            JsValue::from_str(json!(log.guilds).as_str().unwrap_or("")),
-            JsValue::from_str(json!(log.players).as_str().unwrap_or("")),
+            hash.as_str().into(),
+            serde_json::to_string(&log.guilds)
+                .unwrap_or_default()
+                .into(),
+            serde_json::to_string(&log.players)
+                .unwrap_or_default()
+                .into(),
         ])?;
+
     let result = match query.run().await {
         Ok(r) => r,
         Err(e) => {
+            let mut error_message = "request failed";
+            if e.to_string().contains("UNIQUE") {
+                error_message = "duplicate entry";
+            }
             console_log!("query err: {:?}", e);
-            return Response::error("Request failed", 400);
+            return Response::error(error_message, 400);
         }
     };
-    console_log!("result: {:?}", result.error());
+
+    if !result.success() {
+        return Response::error("request failed", 400);
+    }
 
     Response::from_json(&json!({
-        "server": "aegis-flyff",
+        "server": server,
         "date": date,
         "hash": hash
     }))

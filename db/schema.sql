@@ -10,8 +10,8 @@ CREATE TABLE logs (
 	hash TEXT NOT NULL UNIQUE,
 	server VARCHAR(100) NOT NULL REFERENCES servers (id) ON DELETE CASCADE,
 	date BIGINT NOT NULL,
-	guilds JSONB NOT NULL,
-	players JSONB NOT NULL,
+	guilds TEXT NOT NULL,
+	players TEXT NOT NULL,
 	PRIMARY KEY (server, date)
 );
 CREATE INDEX IF NOT EXISTS logs_server_idx ON logs (server);
