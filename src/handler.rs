@@ -72,7 +72,7 @@ pub async fn logs<D>(req: Request, ctx: RouteContext<D>) -> Result<Response> {
             }
         })
         .collect();
-    Response::from_json(&json!({ "results": results }))
+    Response::from_json(&json!(results))
 }
 
 pub async fn new<D>(mut req: Request, ctx: RouteContext<D>) -> Result<Response> {
