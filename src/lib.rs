@@ -36,7 +36,7 @@ pub async fn main(req: Request, env: Env, _ctx: worker::Context) -> Result<Respo
     let result = router
         .get("/api/v1", |_req, _ctx| Response::ok("API is up!"))
         .get_async("/api/v1/logs", handler::logs)
-        .post_async("/api/v1/logs", handler::new_log)
+        .post_async("/api/v1/logs", handler::new)
         .run(req, env)
         .await;
 

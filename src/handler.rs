@@ -8,14 +8,14 @@ use crate::{
     utils::hash_bytes,
 };
 
-#[derive(Debug, Deserialize, Serialize)]
-struct LogResult {
+#[derive(Debug, Serialize)]
+struct LogFromDB<G, P> {
     server: String,
     date: i64,
-    guilds: Vec<Guild>,
-    players: Vec<Player>,
+    guilds: G,
+    players: P,
 }
-type Results = Vec<LogResult>;
+type Results<G, P> = Vec<LogFromDB<G, P>>;
 
 pub async fn logs<D>(req: Request, ctx: RouteContext<D>) -> Result<Response> {
     // get query string first
@@ -26,13 +26,16 @@ pub async fn logs<D>(req: Request, ctx: RouteContext<D>) -> Result<Response> {
 
     // convert to hashmap
     let queries = url.query_pairs().into_iter().collect::<HashMap<_, _>>();
-    let server = queries.get("server").ok_or("")?;
+    let server = match queries.get("server") {
+        Some(s) => s.to_string(),
+        None => "".to_string(),
+    };
 
     // d1 bindings
     let d1 = match ctx.d1("siegelogs") {
         Ok(d) => d,
         Err(e) => {
-            console_log!("d1 err: {:?}", e);
+            console_error!("d1 err: {:?}", e);
             return Response::error("request failed", 400);
         }
     };
@@ -43,30 +46,43 @@ pub async fn logs<D>(req: Request, ctx: RouteContext<D>) -> Result<Response> {
             r#"
                 SELECT server, date, guilds, players
                 FROM logs
-                WHERE COALESCE(server = ?1, 1)
+                WHERE COALESCE(server = CASE WHEN ?1 = '' THEN NULL ELSE ?1 END, TRUE)
                 ORDER BY date DESC
             "#,
         )
-        .bind(&[JsValue::from_str(&server.as_ref())])?;
+        .bind(&[JsValue::from_str(&server.as_ref())])
+        .map_err(|e| {
+            console_error!("query err: {:?}", e);
+            "request failed"
+        })?;
 
     let result = stmt.all().await.map_err(|e| {
-        console_log!("query err: {:?}", e);
+        console_error!("query err: {:?}", e);
         "request failed"
     })?;
-    console_log!("result!");
 
     if !result.success() {
         return Response::error("request failed", 400);
     }
-    console_log!("success!");
 
-    // convert to json
-    let results: Results = result.results::<LogResult>()?;
-
+    let results: Results<String, String> = result.results::<LogFromDB<String, String>>()?;
+    let results: Results<Vec<Guild>, Vec<Player>> = results
+        .into_iter()
+        .map(|r| {
+            let guilds: Vec<Guild> = serde_json::from_str(&r.guilds).unwrap_or_default();
+            let players: Vec<Player> = serde_json::from_str(&r.players).unwrap_or_default();
+            LogFromDB {
+                server: r.server,
+                date: r.date,
+                guilds,
+                players,
+            }
+        })
+        .collect();
     Response::from_json(&json!({ "results": results }))
 }
 
-pub async fn new_log<D>(mut req: Request, ctx: RouteContext<D>) -> Result<Response> {
+pub async fn new<D>(mut req: Request, ctx: RouteContext<D>) -> Result<Response> {
     let form = req.form_data().await?;
     let server = match form.get("server") {
         Some(FormEntry::Field(s)) => s,
@@ -111,7 +127,7 @@ pub async fn new_log<D>(mut req: Request, ctx: RouteContext<D>) -> Result<Respon
     let d1 = match ctx.d1("siegelogs") {
         Ok(d) => d,
         Err(e) => {
-            console_log!("d1 err: {:?}", e);
+            console_error!("d1 err: {:?}", e);
             return Response::error("request failed", 400);
         }
     };
@@ -120,20 +136,20 @@ pub async fn new_log<D>(mut req: Request, ctx: RouteContext<D>) -> Result<Respon
         .prepare(
             r#"
                 INSERT INTO logs (server, date, hash, guilds, players)
-                VALUES (?1, ?2, ?3, ?4, ?5)
+                VALUES (?1, ?2, ?3, json(?4), json(?5))
             "#,
         )
         .bind(&[
             server.clone().into(),
             date.into(),
             hash.as_str().into(),
-            serde_json::to_string(&log.guilds)
-                .unwrap_or_default()
-                .into(),
-            serde_json::to_string(&log.players)
-                .unwrap_or_default()
-                .into(),
-        ])?;
+            JsValue::from_str(json!(log.guilds).to_string().as_ref()),
+            JsValue::from_str(json!(log.players).to_string().as_ref()),
+        ])
+        .map_err(|e| {
+            console_error!("query err: {:?}", e);
+            "request failed"
+        })?;
 
     let result = match query.run().await {
         Ok(r) => r,
@@ -142,12 +158,13 @@ pub async fn new_log<D>(mut req: Request, ctx: RouteContext<D>) -> Result<Respon
             if e.to_string().contains("UNIQUE") {
                 error_message = "duplicate entry";
             }
-            console_log!("query err: {:?}", e);
+            console_error!("query err: {:?}", e);
             return Response::error(error_message, 400);
         }
     };
 
     if !result.success() {
+        console_error!("result error");
         return Response::error("request failed", 400);
     }
 
