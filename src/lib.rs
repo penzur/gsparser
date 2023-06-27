@@ -2,6 +2,7 @@ use utils::logit;
 use worker::*;
 
 mod handler;
+mod log;
 mod parser;
 mod utils;
 

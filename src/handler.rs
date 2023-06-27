@@ -1,21 +1,12 @@
-use serde::{Deserialize, Serialize};
 use serde_json::json;
 use std::collections::HashMap;
 use worker::{js_sys::Date, wasm_bindgen::JsValue, *};
 
 use crate::{
+    log::{List, ListLog},
     parser::{self, Guild, Player},
     utils::hash_bytes,
 };
-
-#[derive(Debug, Serialize)]
-struct LogFromDB<G, P> {
-    server: String,
-    date: i64,
-    guilds: G,
-    players: P,
-}
-type Results<G, P> = Vec<LogFromDB<G, P>>;
 
 pub async fn logs<D>(req: Request, ctx: RouteContext<D>) -> Result<Response> {
     // get query string first
@@ -44,7 +35,9 @@ pub async fn logs<D>(req: Request, ctx: RouteContext<D>) -> Result<Response> {
     let stmt = d1
         .prepare(
             r#"
-                SELECT server, date, guilds, players
+                SELECT server, date,
+                json_extract(guilds, '$[0]') winner,
+                json_extract(players, '$[0]') mvp
                 FROM logs
                 WHERE COALESCE(server = CASE WHEN ?1 = '' THEN NULL ELSE ?1 END, TRUE)
                 ORDER BY date DESC
@@ -65,17 +58,17 @@ pub async fn logs<D>(req: Request, ctx: RouteContext<D>) -> Result<Response> {
         return Response::error("request failed", 400);
     }
 
-    let results: Results<String, String> = result.results::<LogFromDB<String, String>>()?;
-    let results: Results<Vec<Guild>, Vec<Player>> = results
+    let results: List<String, String> = result.results::<ListLog<String, String>>()?;
+    let results: List<Guild, Player> = results
         .into_iter()
         .map(|r| {
-            let guilds: Vec<Guild> = serde_json::from_str(&r.guilds).unwrap_or_default();
-            let players: Vec<Player> = serde_json::from_str(&r.players).unwrap_or_default();
-            LogFromDB {
+            let winner: Guild = serde_json::from_str(&r.winner).unwrap_or_default();
+            let mvp: Player = serde_json::from_str(&r.mvp).unwrap_or_default();
+            ListLog {
                 server: r.server,
                 date: r.date,
-                guilds,
-                players,
+                winner,
+                mvp,
             }
         })
         .collect();

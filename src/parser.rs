@@ -17,7 +17,7 @@ struct Record {
     target: PlayerEntity,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Default)]
 pub struct Guild {
     name: String,
     points: u32,
@@ -25,7 +25,7 @@ pub struct Guild {
     members: Vec<String>,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Default)]
 pub struct Player {
     name: String,
     guild: String,
@@ -167,7 +167,7 @@ pub async fn parse_from_bytes(bytes: &[u8]) -> Result<Log> {
         .into_iter()
         .map(|(_, v)| v)
         .collect::<Vec<Guild>>();
-    guilds.sort_by(|a, b| b.points.cmp(&a.points));
+    guilds.sort_by(|a, b| (b.points + b.resu).cmp(&(a.points + a.resu)));
 
     Ok(Log { guilds, players })
 }
