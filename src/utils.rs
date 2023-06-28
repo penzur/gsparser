@@ -1,4 +1,5 @@
 use cfg_if::cfg_if;
+use chrono::{DateTime, Local};
 use sha2::{Digest, Sha256};
 use worker::*;
 
@@ -14,10 +15,12 @@ cfg_if! {
 }
 
 pub fn logit(ip: &str, method: &str, path: &str, code: u16, size: usize, start_time: u64) {
+    let current_datetime: DateTime<Local> = Local::now();
+    let formatted_date = current_datetime.format("%d/%b/%Y:%H:%M:%S %z");
     console_log!(
-        "{} - - [{:?}] \"{} {}\" {} {} {}ms",
+        "{} - - [{}] \"{} {}\" {} {} {}ms",
         ip,
-        Date::now().to_string(),
+        formatted_date,
         method,
         path,
         code,
