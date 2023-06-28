@@ -2,11 +2,7 @@ use serde_json::json;
 use std::collections::HashMap;
 use worker::{js_sys::Date, wasm_bindgen::JsValue, *};
 
-use crate::{
-    log::{Guild, List, Log, Player},
-    parser,
-    utils::hash_bytes,
-};
+use crate::log::{from_bytes, Guild, Logs, LogsItem, Player};
 
 pub async fn logs<D>(req: Request, ctx: RouteContext<D>) -> Result<Response> {
     // get query string first
@@ -18,12 +14,16 @@ pub async fn logs<D>(req: Request, ctx: RouteContext<D>) -> Result<Response> {
     // convert to hashmap
     let queries = url.query_pairs().into_iter().collect::<HashMap<_, _>>();
     let server = match queries.get("server") {
-        Some(s) => s.to_string(),
-        None => "".to_string(),
+        Some(s) => s.to_string().into(),
+        None => JsValue::null(),
     };
-    let date = match queries.get("date") {
-        Some(s) => s.to_string().parse::<f64>().unwrap_or_default(),
-        None => 0.0,
+    let last_date = match queries.get("last_date") {
+        Some(s) => s.to_string().parse::<f64>().unwrap_or_default().into(),
+        None => JsValue::null(),
+    };
+    let max_rows = match queries.get("max_rows") {
+        Some(s) => s.to_string().parse::<u32>().unwrap_or_default().into(),
+        None => JsValue::null(),
     };
 
     // d1 bindings
@@ -41,14 +41,15 @@ pub async fn logs<D>(req: Request, ctx: RouteContext<D>) -> Result<Response> {
             r#"
                 SELECT server, date,
                 json_extract(guilds, '$[0]') winner,
-                json_remove(json_extract(players, '$[0]'), '$.kills', '$.deaths') mvp
+                json_extract(players, '$[0]') mvp
                 FROM logs
-                WHERE COALESCE(server = CASE WHEN ?1 = '' THEN NULL ELSE ?1 END, TRUE)
-                AND COALESCE(date = CASE WHEN ?2 = 0  THEN NULL ELSE ?2 END, TRUE)
+                WHERE COALESCE(server = ?1, TRUE)
+                AND (date < ?2 OR ?2 IS NULL)
                 ORDER BY date DESC
+                LIMIT COALESCE(?3, 20)
             "#,
         )
-        .bind(&[JsValue::from_str(&server.as_ref()), JsValue::from_f64(date)])
+        .bind(&[server, last_date, max_rows])
         .map_err(|e| {
             console_error!("query err: {:?}", e);
             "request failed"
@@ -63,19 +64,17 @@ pub async fn logs<D>(req: Request, ctx: RouteContext<D>) -> Result<Response> {
         return Response::error("request failed", 400);
     }
 
-    let results: List<String, String> = result.results()?;
-    let results: List<Guild, Player> = results
+    let results: Logs<String, String> = result.results()?;
+    let results: Logs<Guild, Player> = results
         .into_iter()
         .map(|r| {
-            let winner_str = &r.winner.unwrap_or_default();
-            let mvp_str = &r.mvp.unwrap_or_default();
-            let winner = serde_json::from_str(winner_str).unwrap_or_default();
-            let mvp = serde_json::from_str(mvp_str).unwrap_or_default();
-            Log {
+            let winner = serde_json::from_str(&r.winner).unwrap_or_default();
+            let mvp = serde_json::from_str(&r.mvp).unwrap_or_default();
+            LogsItem {
                 server: r.server,
                 date: r.date,
-                winner: Some(winner),
-                mvp: Some(mvp),
+                winner,
+                mvp,
             }
         })
         .collect();
@@ -126,8 +125,10 @@ pub async fn new<D>(mut req: Request, ctx: RouteContext<D>) -> Result<Response> 
 
     // parse file
     let data = &file.bytes().await.map_err(|_| "invalid file format")?;
-    let hash = hash_bytes(&data);
-    let log = parser::parse_from_bytes(&data).await?;
+    let log = from_bytes(&data)
+        .await?
+        .with_server(&server)
+        .with_date(date);
 
     // d1 bindings
     let d1 = match ctx.d1("siegelogs") {
@@ -148,7 +149,7 @@ pub async fn new<D>(mut req: Request, ctx: RouteContext<D>) -> Result<Response> 
         .bind(&[
             server.clone().into(),
             date.into(),
-            hash.as_str().into(),
+            log.hash.into(),
             JsValue::from_str(json!(log.guilds).to_string().as_ref()),
             JsValue::from_str(json!(log.players).to_string().as_ref()),
         ])
@@ -176,7 +177,6 @@ pub async fn new<D>(mut req: Request, ctx: RouteContext<D>) -> Result<Response> 
 
     Response::from_json(&json!({
         "server": server,
-        "date": date,
-        "hash": hash
+        "date": date
     }))
 }

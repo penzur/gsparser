@@ -3,7 +3,6 @@ use worker::*;
 
 mod handler;
 mod log;
-mod parser;
 mod utils;
 
 #[event(fetch, respond_with_errors)]
