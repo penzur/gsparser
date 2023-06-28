@@ -91,7 +91,13 @@ pub async fn new<D>(mut req: Request, ctx: RouteContext<D>) -> Result<Response> 
     };
 
     let name_str = file.name().to_owned();
-    let name_str = name_str.split("_").last().unwrap_or_default();
+    let name_str = name_str
+        .split(".")
+        .next()
+        .unwrap_or_default()
+        .split("_")
+        .last()
+        .unwrap_or_default();
     // check for valid date yyyymmdd
     let rx = regex::Regex::new(r"^\d{8}$").unwrap();
     let date = {
