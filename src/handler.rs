@@ -3,8 +3,8 @@ use std::collections::HashMap;
 use worker::{js_sys::Date, wasm_bindgen::JsValue, *};
 
 use crate::{
-    log::{List, ListLog},
-    parser::{self, Guild, Player},
+    log::{Guild, List, Log, Player},
+    parser,
     utils::hash_bytes,
 };
 
@@ -20,6 +20,10 @@ pub async fn logs<D>(req: Request, ctx: RouteContext<D>) -> Result<Response> {
     let server = match queries.get("server") {
         Some(s) => s.to_string(),
         None => "".to_string(),
+    };
+    let date = match queries.get("date") {
+        Some(s) => s.to_string().parse::<f64>().unwrap_or_default(),
+        None => 0.0,
     };
 
     // d1 bindings
@@ -37,13 +41,14 @@ pub async fn logs<D>(req: Request, ctx: RouteContext<D>) -> Result<Response> {
             r#"
                 SELECT server, date,
                 json_extract(guilds, '$[0]') winner,
-                json_extract(players, '$[0]') mvp
+                json_remove(json_extract(players, '$[0]'), '$.kills', '$.deaths') mvp
                 FROM logs
                 WHERE COALESCE(server = CASE WHEN ?1 = '' THEN NULL ELSE ?1 END, TRUE)
+                AND COALESCE(date = CASE WHEN ?2 = 0  THEN NULL ELSE ?2 END, TRUE)
                 ORDER BY date DESC
             "#,
         )
-        .bind(&[JsValue::from_str(&server.as_ref())])
+        .bind(&[JsValue::from_str(&server.as_ref()), JsValue::from_f64(date)])
         .map_err(|e| {
             console_error!("query err: {:?}", e);
             "request failed"
@@ -58,17 +63,19 @@ pub async fn logs<D>(req: Request, ctx: RouteContext<D>) -> Result<Response> {
         return Response::error("request failed", 400);
     }
 
-    let results: List<String, String> = result.results::<ListLog<String, String>>()?;
+    let results: List<String, String> = result.results()?;
     let results: List<Guild, Player> = results
         .into_iter()
         .map(|r| {
-            let winner: Guild = serde_json::from_str(&r.winner).unwrap_or_default();
-            let mvp: Player = serde_json::from_str(&r.mvp).unwrap_or_default();
-            ListLog {
+            let winner_str = &r.winner.unwrap_or_default();
+            let mvp_str = &r.mvp.unwrap_or_default();
+            let winner = serde_json::from_str(winner_str).unwrap_or_default();
+            let mvp = serde_json::from_str(mvp_str).unwrap_or_default();
+            Log {
                 server: r.server,
                 date: r.date,
-                winner,
-                mvp,
+                winner: Some(winner),
+                mvp: Some(mvp),
             }
         })
         .collect();

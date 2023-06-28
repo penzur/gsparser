@@ -1,47 +1,10 @@
-use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
-
 use regex::Regex;
+use std::collections::HashMap;
 use worker::*;
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
-struct PlayerEntity {
-    guild: String,
-    name: String,
-}
+use crate::log::{Guild, Leaderboard, Player, PlayerEntity, Record};
 
-#[derive(Debug)]
-struct Record {
-    attacker: PlayerEntity,
-    points: u8,
-    target: PlayerEntity,
-}
-
-#[derive(Debug, Serialize, Deserialize, Default)]
-pub struct Guild {
-    name: String,
-    points: u32,
-    resu: u32,
-    members: Vec<String>,
-}
-
-#[derive(Debug, Serialize, Deserialize, Default)]
-pub struct Player {
-    name: String,
-    guild: String,
-    points: u32,
-    resu: u32,
-    kills: Vec<Vec<PlayerEntity>>,
-    deaths: Vec<PlayerEntity>,
-}
-
-#[derive(Debug, Serialize)]
-pub struct Log {
-    pub guilds: Vec<Guild>,
-    pub players: Vec<Player>,
-}
-
-pub async fn parse_from_bytes(bytes: &[u8]) -> Result<Log> {
+pub async fn parse_from_bytes(bytes: &[u8]) -> Result<Leaderboard> {
     let lines = String::from_utf8(bytes.to_vec())
         .map_err(|_| worker::Error::RustError("Could not parse data".to_owned()))?;
     // since rust regexp does not support lookaheads, then we'll do it the
@@ -169,5 +132,5 @@ pub async fn parse_from_bytes(bytes: &[u8]) -> Result<Log> {
         .collect::<Vec<Guild>>();
     guilds.sort_by(|a, b| (b.points + b.resu).cmp(&(a.points + a.resu)));
 
-    Ok(Log { guilds, players })
+    Ok(Leaderboard { guilds, players })
 }
