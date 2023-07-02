@@ -6,23 +6,15 @@ use worker::*;
 
 use crate::utils::hash_bytes;
 
-#[derive(Debug, Serialize)]
-pub struct Log {
+#[derive(Debug, Serialize, Deserialize)]
+pub struct Log<G, P> {
     pub server: String,
     pub date: f64,
-    pub hash: String,
-    pub guilds: Vec<Guild>,
-    pub players: Vec<Player>,
+    #[serde(skip_serializing)]
+    pub hash: Option<String>,
+    pub guilds: G,
+    pub players: P,
 }
-
-#[derive(Debug, Deserialize, Serialize)]
-pub struct LogsItem<G, P> {
-    pub server: String,
-    pub date: f64,
-    pub winner: G,
-    pub mvp: P,
-}
-pub type Logs<G, P> = Vec<LogsItem<G, P>>;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PlayerEntity {
@@ -55,7 +47,7 @@ pub struct Player {
     pub deaths: Vec<PlayerEntity>,
 }
 
-impl Log {
+impl<G, P> Log<G, P> {
     pub fn with_server(mut self, server: &str) -> Self {
         self.server = server.to_owned();
         self
@@ -67,7 +59,7 @@ impl Log {
     }
 }
 
-pub async fn from_bytes(bytes: &[u8]) -> Result<Log> {
+pub async fn from_bytes(bytes: &[u8]) -> Result<Log<Vec<Guild>, Vec<Player>>> {
     let lines = String::from_utf8(bytes.to_vec())
         .map_err(|_| worker::Error::RustError("Could not parse data".to_owned()))?;
     // since rust regexp does not support lookaheads, then we'll do it the
@@ -195,11 +187,13 @@ pub async fn from_bytes(bytes: &[u8]) -> Result<Log> {
         .collect::<Vec<Guild>>();
     guilds.sort_by(|a, b| (b.points + b.resu).cmp(&(a.points + a.resu)));
 
-    Ok(Log {
+    let log: Log<Vec<Guild>, Vec<Player>> = Log {
         guilds,
         players,
         server: "".to_owned(),
         date: 0.0,
-        hash: hash_bytes(&bytes),
-    })
+        hash: Some(hash_bytes(&bytes)),
+    };
+
+    Ok(log)
 }

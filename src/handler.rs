@@ -2,7 +2,64 @@ use serde_json::{json, Value};
 use std::collections::HashMap;
 use worker::{js_sys::Date, wasm_bindgen::JsValue, *};
 
-use crate::log::from_bytes;
+use crate::log::{from_bytes, Guild, Log, Player};
+
+pub async fn log<D>(_req: Request, ctx: RouteContext<D>) -> Result<Response> {
+    // parse server and date params
+    let server = match ctx.param("server") {
+        Some(s) => JsValue::from_str(s.as_str()),
+        None => return Response::error("server is required", 400),
+    };
+
+    let date = match ctx.param("date") {
+        Some(s) => JsValue::from_f64(s.parse::<f64>().unwrap_or_default()),
+        None => return Response::error("date is required", 400),
+    };
+
+    // d1 bindings
+    let d1 = match ctx.d1("siegelogs") {
+        Ok(d) => d,
+        Err(e) => {
+            console_error!("d1 err: {:?}", e);
+            return Response::error("request failed", 400);
+        }
+    };
+
+    let stmt = d1
+        .prepare(
+            r#"
+                SELECT server, date, guilds, players
+                FROM logs
+                WHERE server = ?1
+                AND date = ?2
+                LIMIT 1
+            "#,
+        )
+        .bind(&[server, date])
+        .map_err(|e| {
+            console_error!("query err: {:?}", e);
+            "request failed"
+        })?;
+
+    let result = stmt
+        .first::<Log<String, String>>(None)
+        .await
+        .map_err(|e| {
+            console_error!("query err: {:?}", e);
+            "request failed"
+        })?
+        .ok_or("not found")?;
+
+    let result: Log<Vec<Guild>, Vec<Player>> = Log {
+        hash: None,
+        server: result.server,
+        date: result.date,
+        guilds: serde_json::from_str(&result.guilds).unwrap_or_default(),
+        players: serde_json::from_str(&result.players).unwrap_or_default(),
+    };
+
+    Response::from_json(&json!(result))
+}
 
 pub async fn logs<D>(req: Request, ctx: RouteContext<D>) -> Result<Response> {
     // get query string first
@@ -110,7 +167,7 @@ pub async fn new<D>(mut req: Request, ctx: RouteContext<D>) -> Result<Response> 
             // create rust date
             Date::new_with_year_month_day(
                 yr.parse().unwrap_or_default(),
-                mo.parse().unwrap_or_default(),
+                mo.parse::<i32>().unwrap_or_default() - 1, // js month is 0 based
                 dy.parse().unwrap_or_default(),
             )
             .get_time()
