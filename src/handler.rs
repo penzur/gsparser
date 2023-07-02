@@ -1,8 +1,8 @@
-use serde_json::json;
+use serde_json::{json, Value};
 use std::collections::HashMap;
 use worker::{js_sys::Date, wasm_bindgen::JsValue, *};
 
-use crate::log::{from_bytes, Guild, Logs, LogsItem, Player};
+use crate::log::from_bytes;
 
 pub async fn logs<D>(req: Request, ctx: RouteContext<D>) -> Result<Response> {
     // get query string first
@@ -47,8 +47,8 @@ pub async fn logs<D>(req: Request, ctx: RouteContext<D>) -> Result<Response> {
         .prepare(
             r#"
                 SELECT server, date,
-                json_extract(guilds, '$[0]') winner,
-                json_extract(players, '$[0]') mvp
+                json_extract(json_extract(guilds, '$[0]'), '$.name') winner,
+                json_extract(json_extract(players, '$[0]'), '$.name') mvp
                 FROM logs
                 WHERE COALESCE(server = ?1, TRUE)
                 AND (date < ?2 OR ?2 IS NULL)
@@ -71,20 +71,8 @@ pub async fn logs<D>(req: Request, ctx: RouteContext<D>) -> Result<Response> {
         return Response::error("request failed", 400);
     }
 
-    let results: Logs<String, String> = result.results()?;
-    let results: Logs<Guild, Player> = results
-        .into_iter()
-        .map(|r| {
-            let winner = serde_json::from_str(&r.winner).unwrap_or_default();
-            let mvp = serde_json::from_str(&r.mvp).unwrap_or_default();
-            LogsItem {
-                server: r.server,
-                date: r.date,
-                winner,
-                mvp,
-            }
-        })
-        .collect();
+    type LogsItemResult = Vec<Value>;
+    let results: LogsItemResult = result.results()?;
     Response::from_json(&json!(results))
 }
 
