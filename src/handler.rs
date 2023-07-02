@@ -71,8 +71,7 @@ pub async fn logs<D>(req: Request, ctx: RouteContext<D>) -> Result<Response> {
         return Response::error("request failed", 400);
     }
 
-    type LogsItemResult = Vec<Value>;
-    let results: LogsItemResult = result.results()?;
+    let results: Vec<Value> = result.results()?;
     Response::from_json(&json!(results))
 }
 
