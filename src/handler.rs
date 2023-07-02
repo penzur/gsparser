@@ -14,7 +14,14 @@ pub async fn logs<D>(req: Request, ctx: RouteContext<D>) -> Result<Response> {
     // convert to hashmap
     let queries = url.query_pairs().into_iter().collect::<HashMap<_, _>>();
     let server = match queries.get("server") {
-        Some(s) => s.to_string().into(),
+        Some(s) => {
+            let s = s.to_string();
+            if s.is_empty() {
+                JsValue::null()
+            } else {
+                s.into()
+            }
+        }
         None => JsValue::null(),
     };
     let last_date = match queries.get("last_date") {
