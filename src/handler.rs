@@ -103,13 +103,14 @@ pub async fn logs<D>(req: Request, ctx: RouteContext<D>) -> Result<Response> {
     let stmt = d1
         .prepare(
             r#"
-                SELECT server, date,
-                json_extract(json_extract(guilds, '$[0]'), '$.name') winner,
-                json_extract(json_extract(players, '$[0]'), '$.name') mvp
-                FROM logs
-                WHERE COALESCE(server = ?1, TRUE)
-                AND (date < ?2 OR ?2 IS NULL)
-                ORDER BY date DESC
+                SELECT l.server, l.date, s.name as server_name,
+                json_extract(json_extract(l.guilds, '$[0]'), '$.name') winner,
+                json_extract(json_extract(l.players, '$[0]'), '$.name') mvp
+                FROM logs l
+                JOIN servers s on l.server = s.id
+                WHERE COALESCE(l.server = ?1, TRUE)
+                AND (l.date < ?2 OR ?2 IS NULL)
+                ORDER BY l.date DESC
                 LIMIT COALESCE(?3, 20)
             "#,
         )
