@@ -22,7 +22,6 @@ worker = { git = "https://github.com/cloudflare/workers-rs.git", branch = "main"
 serde = { version = "1.0.164", features = ["derive"] }
 sha2 = "0.10.7"
 chrono = "0.4.26"
-time = "0.3.22"
 
 [build-dependencies]
 yarte = "0.15.7"
