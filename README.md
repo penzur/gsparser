@@ -27,7 +27,10 @@ This is a complete rewrite of the old FlyFF guild siege parser, which is hosted 
 - **Web App**
 	
 	_TODO:_
-    - [ ] Set up front-end with SolidJS
+    - [x] Set up front-end with SolidJS
+    - [ ] Main page for recent logs
+    - [ ] New log form/page
+    - [ ] Log page
 
 &nbsp;
  
