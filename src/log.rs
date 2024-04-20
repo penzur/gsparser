@@ -75,7 +75,7 @@ pub async fn from_bytes(bytes: &[u8]) -> Result<Log<Vec<Guild>, Vec<Player>>> {
         .map(|x| x.split("\n").collect::<Vec<&str>>()[0])
         .collect::<Vec<&str>>();
 
-    let rx = Regex::new(r"\[(.*?)\] (.*?)(\((\d+) grade\)) Attack \[(.*?)\] (.*)")
+    let rx = Regex::new(r"(\[\d{1,2}:\d{2}:\d{2}\] )?\[(.*?)\] (.*?)(\((\d+) grade\)) Attack \[(.*?)\] (.*)")
         .map_err(|_| Error::RustError("Invalid data format".to_owned()))?;
 
     let entries = lines
@@ -83,16 +83,16 @@ pub async fn from_bytes(bytes: &[u8]) -> Result<Log<Vec<Guild>, Vec<Player>>> {
         .filter_map(|e| {
             if let Some(caps) = rx.captures(e) {
                 let attacker = PlayerEntity {
-                    guild: caps.get(1).map_or("", |m| m.as_str()).trim().to_string(),
-                    name: caps.get(2).map_or("", |m| m.as_str()).trim().to_owned(),
+                    guild: caps.get(2).map_or("", |m| m.as_str()).trim().to_string(),
+                    name: caps.get(3).map_or("", |m| m.as_str()).trim().to_owned(),
                 };
                 let points = caps
-                    .get(4)
+                    .get(5)
                     .and_then(|m| m.as_str().parse::<u8>().ok())
                     .unwrap_or_default();
                 let target = PlayerEntity {
-                    guild: caps.get(5).map_or("", |m| m.as_str()).trim().to_string(),
-                    name: caps.get(6).map_or("", |m| m.as_str()).trim().to_owned(),
+                    guild: caps.get(6).map_or("", |m| m.as_str()).trim().to_string(),
+                    name: caps.get(7).map_or("", |m| m.as_str()).trim().to_owned(),
                 };
                 Some(Record {
                     attacker,
