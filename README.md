@@ -17,9 +17,9 @@ This is a complete rewrite of the old FlyFF guild siege parser which can be foun
 
 - Endpoints
 
-	- [ ] `POST /logs` - Creates a new log entry (form-data should have a file and server fields)
-	- [ ] `GET /logs` - Gets all logs (can be filtered using a `server` query string i.e: `?server=<name>`)
-	- [ ] `GET /logs/:server/:date` - Fetch a single log
+	- [x] `POST /logs` - Creates a new log entry (form-data should have a file and server fields)
+	- [x] `GET /logs` - Gets all logs (can be filtered using a `server` query string i.e: `?server=<name>`)
+	- [x] `GET /logs/:server/:date` - Fetch a single log
 
 &nbsp;
 
