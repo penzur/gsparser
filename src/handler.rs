@@ -4,6 +4,37 @@ use worker::{js_sys::Date, wasm_bindgen::JsValue, *};
 
 use crate::log::{from_bytes, Guild, Log, Player};
 
+pub async fn all_servers<D>(_req: Request, ctx: RouteContext<D>) -> Result<Response> {
+    let d1 = match ctx.d1("siegelogs") {
+        Ok(d) => d,
+        Err(e) => {
+            console_error!("d1 err: {:?}", e);
+            return Response::error("request failed", 400);
+        }
+    };
+
+    let query = d1
+        .prepare(
+            r#"
+                SELECT *
+                FROM servers
+            "#,
+        )
+        .all()
+        .await
+        .map_err(|e| {
+            console_error!("query err: {:?}", e);
+            "request failed"
+        })?;
+
+    if !query.success() {
+        return Response::error("Request failed", 400)
+    }
+
+    let results: Vec<Value> = query.results()?;
+    Response::from_json(&json!(results))
+}
+
 pub async fn log<D>(_req: Request, ctx: RouteContext<D>) -> Result<Response> {
     // parse server and date params
     let server = match ctx.param("server") {

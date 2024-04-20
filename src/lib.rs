@@ -40,6 +40,7 @@ pub async fn main(req: Request, env: Env, _ctx: worker::Context) -> Result<Respo
             Response::from_json(&json!({ "status" : "ok" }))
         })
         .get_async("/api/v1/logs", handler::all_logs)
+        .get_async("/api/v1/servers", handler::all_servers)
         .get_async("/api/v1/logs/:server/:date", handler::log)
         // POST
         .post_async("/api/v1/logs", handler::new)
