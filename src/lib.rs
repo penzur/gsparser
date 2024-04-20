@@ -1,3 +1,4 @@
+use serde_json::json;
 use utils::logit;
 use worker::*;
 
@@ -35,11 +36,13 @@ pub async fn main(req: Request, env: Env, _ctx: worker::Context) -> Result<Respo
     let router = Router::new();
     let result = router
         // GET
-        .get("/", |_req, _ctx| Response::ok("API is up!"))
-        .get_async("/logs", handler::all_logs)
-        .get_async("/logs/:server/:date", handler::log)
+        .get("/api/v1", |_req, _ctx| {
+            Response::from_json(&json!({ "status" : "ok" }))
+        })
+        .get_async("/api/v1/logs", handler::all_logs)
+        .get_async("/api/v1/logs/:server/:date", handler::log)
         // POST
-        .post_async("/logs", handler::new)
+        .post_async("/api/v1/logs", handler::new)
         .run(req, env)
         .await;
 
