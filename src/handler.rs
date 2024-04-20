@@ -61,7 +61,7 @@ pub async fn log<D>(_req: Request, ctx: RouteContext<D>) -> Result<Response> {
     Response::from_json(&json!(result))
 }
 
-pub async fn logs<D>(req: Request, ctx: RouteContext<D>) -> Result<Response> {
+pub async fn all_logs<D>(req: Request, ctx: RouteContext<D>) -> Result<Response> {
     // get query string first
     let url = match req.url() {
         Ok(q) => q,
@@ -135,16 +135,14 @@ pub async fn logs<D>(req: Request, ctx: RouteContext<D>) -> Result<Response> {
 
 pub async fn new<D>(mut req: Request, ctx: RouteContext<D>) -> Result<Response> {
     let form = req.form_data().await?;
+
     let server = match form.get("server") {
         Some(FormEntry::Field(s)) => s,
         _ => return Response::error("server is required", 400),
     };
-    let file = match form.get("file").ok_or("file not found") {
-        Ok(file) => file,
-        _ => return Response::error("file not found", 400),
-    };
-    let file = match file {
-        FormEntry::File(f) => f,
+
+    let file = match form.get("file") {
+        Some(FormEntry::File(f)) => f,
         _ => return Response::error("file not found", 400),
     };
 
