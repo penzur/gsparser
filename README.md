@@ -17,10 +17,10 @@ This is a complete rewrite of the old FlyFF guild siege parser which can be foun
 
 - Endpoints
 
-	- [ ] `GET /` - display all
-	- [ ] `GET /:server` - server-specific logs
-	- [ ] `GET /:server/:date` - single log
-	- [ ] `POST /:server` - upload log
+	- [ ] `GET /logs` - display all
+	- [ ] `GET /logs/:server` - server-specific logs
+	- [ ] `GET /logs/:server/:date` - single log
+	- [ ] `POST /logs/:server` - upload log
 
 &nbsp;
 
