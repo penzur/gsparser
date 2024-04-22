@@ -2,7 +2,7 @@ use serde::{Deserialize, Serialize};
 
 use regex::Regex;
 use std::collections::HashMap;
-use worker::*;
+use worker::{*, Error::RustError};
 
 use crate::utils::hash_bytes;
 
@@ -61,15 +61,13 @@ impl<G, P> Log<G, P> {
 
 pub async fn from_bytes(bytes: &[u8]) -> Result<Log<Vec<Guild>, Vec<Player>>> {
     let lines = String::from_utf8(bytes.to_vec())
-        .map_err(|_| worker::Error::RustError("Could not parse data".to_owned()))?;
-    // since rust regexp does not support lookaheads, then we'll do it the
-    // good ol find-and-replace way XD
-    let lines = lines
+        .map_err(|_| RustError("Could not parse data".to_owned()))?
         .replace("→ ", "")
         .replace("?? ", "")
         .replace("Guild Master ", "")
         .replace("Defender ", "")
         .replace("\r", "");
+
     let lines = lines
         .split("\n\n")
         .map(|x| x.split("\n").collect::<Vec<&str>>()[0])

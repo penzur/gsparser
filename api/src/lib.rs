@@ -49,7 +49,7 @@ pub async fn main(req: Request, env: Env, _ctx: worker::Context) -> Result<Respo
 
     let mut resp = match result {
         Ok(rsp) => rsp,
-        Err(_) => return Response::error("request failed", 400),
+        Err(_) => return Response::error("Request failed", 400),
     };
 
     let code = resp.status_code();

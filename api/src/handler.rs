@@ -8,8 +8,8 @@ pub async fn all_servers<D>(_req: Request, ctx: RouteContext<D>) -> Result<Respo
     let d1 = match ctx.d1("siegelogs") {
         Ok(d) => d,
         Err(e) => {
-            console_error!("d1 err: {:?}", e);
-            return Response::error("request failed", 400);
+            console_error!("D1 error: {:?}", e);
+            return Response::error("Request failed", 400);
         }
     };
 
@@ -24,7 +24,7 @@ pub async fn all_servers<D>(_req: Request, ctx: RouteContext<D>) -> Result<Respo
         .await
         .map_err(|e| {
             console_error!("query err: {:?}", e);
-            "request failed"
+            "Request failed"
         })?;
 
     if !query.success() {
@@ -51,8 +51,8 @@ pub async fn log<D>(_req: Request, ctx: RouteContext<D>) -> Result<Response> {
     let d1 = match ctx.d1("siegelogs") {
         Ok(d) => d,
         Err(e) => {
-            console_error!("d1 err: {:?}", e);
-            return Response::error("request failed", 400);
+            console_error!("D1 error: {:?}", e);
+            return Response::error("Request failed", 400);
         }
     };
 
@@ -68,18 +68,18 @@ pub async fn log<D>(_req: Request, ctx: RouteContext<D>) -> Result<Response> {
         )
         .bind(&[server, date])
         .map_err(|e| {
-            console_error!("query err: {:?}", e);
-            "request failed"
+            console_error!("D1 query error: {:?}", e);
+            "Request failed"
         })?;
 
     let result = stmt
         .first::<Log<String, String>>(None)
         .await
         .map_err(|e| {
-            console_error!("query err: {:?}", e);
-            "request failed"
+            console_error!("D1 query err: {:?}", e);
+            "Request failed"
         })?
-        .ok_or("not found")?;
+        .ok_or("Log could not be found")?;
 
     let result: Log<Vec<Guild>, Vec<Player>> = Log {
         hash: None,
@@ -125,8 +125,8 @@ pub async fn all_logs<D>(req: Request, ctx: RouteContext<D>) -> Result<Response>
     let d1 = match ctx.d1("siegelogs") {
         Ok(d) => d,
         Err(e) => {
-            console_error!("d1 err: {:?}", e);
-            return Response::error("request failed", 400);
+            console_error!("D1 error: {:?}", e);
+            return Response::error("Request failed", 400);
         }
     };
 
@@ -148,16 +148,16 @@ pub async fn all_logs<D>(req: Request, ctx: RouteContext<D>) -> Result<Response>
         .bind(&[server, last_date, max_rows])
         .map_err(|e| {
             console_error!("query err: {:?}", e);
-            "request failed"
+            "Request failed"
         })?;
 
     let result = stmt.all().await.map_err(|e| {
         console_error!("query err: {:?}", e);
-        "request failed"
+        "Request failed"
     })?;
 
     if !result.success() {
-        return Response::error("request failed", 400);
+        return Response::error("Request failed", 400);
     }
 
     let results: Vec<Value> = result.results()?;
@@ -169,12 +169,12 @@ pub async fn new<D>(mut req: Request, ctx: RouteContext<D>) -> Result<Response> 
 
     let server = match form.get("server") {
         Some(FormEntry::Field(s)) => s,
-        _ => return Response::error("server is required", 400),
+        _ => return Response::error("Server is required", 400),
     };
 
     let file = match form.get("file") {
         Some(FormEntry::File(f)) => f,
-        _ => return Response::error("file not found", 400),
+        _ => return Response::error("File is required", 404),
     };
 
     let name_str = file.name().to_owned();
@@ -205,7 +205,7 @@ pub async fn new<D>(mut req: Request, ctx: RouteContext<D>) -> Result<Response> 
     };
 
     // parse file
-    let data = &file.bytes().await.map_err(|_| "invalid file format")?;
+    let data = &file.bytes().await.map_err(|_| "Invalid file format")?;
     let log = from_bytes(&data)
         .await?
         .with_server(&server)
@@ -215,8 +215,8 @@ pub async fn new<D>(mut req: Request, ctx: RouteContext<D>) -> Result<Response> 
     let d1 = match ctx.d1("siegelogs") {
         Ok(d) => d,
         Err(e) => {
-            console_error!("d1 err: {:?}", e);
-            return Response::error("request failed", 400);
+            console_error!("D1 error: {:?}", e);
+            return Response::error("Request failed", 400);
         }
     };
 
@@ -235,25 +235,21 @@ pub async fn new<D>(mut req: Request, ctx: RouteContext<D>) -> Result<Response> 
             JsValue::from_str(json!(log.players).to_string().as_ref()),
         ])
         .map_err(|e| {
-            console_error!("query err: {:?}", e);
-            "request failed"
+            console_error!("D1 query err: {:?}", e);
+            "Request failed"
         })?;
 
     let result = match query.run().await {
         Ok(r) => r,
         Err(e) => {
-            let mut error_message = "request failed";
-            if e.to_string().contains("UNIQUE") {
-                error_message = "duplicate entry";
-            }
             console_error!("query err: {:?}", e);
-            return Response::error(error_message, 400);
+            return Response::error("Request failed", 400);
         }
     };
 
     if !result.success() {
         console_error!("result error");
-        return Response::error("request failed", 400);
+        return Response::error("Request failed", 400);
     }
 
     Response::from_json(&json!({
