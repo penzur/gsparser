@@ -1,6 +1,6 @@
 # GSParser on the edge
 
-This is a complete rewrite of the old FlyFF guild siege parser, which is hosted on Vercel with shitty Nextjs.
+This is a complete rewrite of the old FlyFF guild siege parser, which was hosted on Vercel with Nextjs.
 
 
 ### Stack
