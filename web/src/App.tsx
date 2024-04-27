@@ -9,7 +9,7 @@ const App: Component<RouteSectionProps> = (props) => {
 
     return <div class="flex flex-col h-screen items-center">
         <Header />
-        <main class="flex-grow overflow-y-auto w-1/2">
+        <main class="flex-grow overflow-y-auto w-10/12 lg:w-1/2 ">
             {children()}
         </main>
         <Footer />
