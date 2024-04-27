@@ -7,9 +7,9 @@ import { RouteSectionProps } from '@solidjs/router';
 const App: Component<RouteSectionProps> = (props) => {
     const children = () => props.children;
 
-    return <div class="flex flex-col h-screen">
+    return <div class="flex flex-col h-screen items-center">
         <Header />
-        <main class="p-3 flex-grow flex items-center justify-center">
+        <main class="flex-grow overflow-y-auto w-1/2">
             {children()}
         </main>
         <Footer />
