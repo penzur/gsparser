@@ -1,15 +1,19 @@
-import type { Component, JSX } from 'solid-js';
+import type { Component } from 'solid-js';
 
-const App: Component<{ children: JSX.Element }> = ({ children }) => {
-    return <>
-        <header class="fixed p-3 text-orange-500 top-0 left-0 w-full">
-            <a class="text-4xl font-bold">gsparser</a>
-            <span><small>V2.0</small></span>
-        </header>
-        <main class="p-3 flex items-center justify-center h-screen">
-            {children}
+import Header from "./Header";
+import Footer from "./Footer";
+import { RouteSectionProps } from '@solidjs/router';
+
+const App: Component<RouteSectionProps> = (props) => {
+    const children = () => props.children;
+
+    return <div class="flex flex-col h-screen">
+        <Header />
+        <main class="p-3 flex-grow flex items-center justify-center">
+            {children()}
         </main>
-    </>;
+        <Footer />
+    </div>;
 };
 
 export default App;

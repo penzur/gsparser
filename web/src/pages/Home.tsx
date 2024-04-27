@@ -1,7 +1,7 @@
 import type { Component } from 'solid-js';
 
 const Home: Component = () => {
-    return <p class="text-orange-300 font-bold text-2xl">stay tuned</p>;
+    return <p class="font-bold text-2xl">Still brewing. Be back later.</p>;
 };
 
 export default Home;
