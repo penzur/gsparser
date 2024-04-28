@@ -65,6 +65,10 @@ pub async fn main(req: Request, env: Env, _ctx: worker::Context) -> Result<Respo
         .ok();
 
     if method != "GET" {
+        let keyc = key.clone();
+        if let Ok(_) = c.delete(key, true).await {
+            console_log!("cache has been purged! {keyc}");
+        }
         return Ok(resp);
     }
 
@@ -79,7 +83,7 @@ pub async fn main(req: Request, env: Env, _ctx: worker::Context) -> Result<Respo
             .ok();
         cache_resp
             .headers_mut()
-            .set("Cache-Control", "public, s-max-age=31536000")
+            .set("Cache-Control", "public, s-max-age=3600")
             .ok();
         c.put(&key, cache_resp).await.ok();
     }
