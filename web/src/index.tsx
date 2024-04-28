@@ -10,6 +10,5 @@ const NotFound = lazy(() => import('./NotFound'));
 
 render(() => <Router root={App}>
     <Route path="/" component={Home} />
-
     <Route path="*" component={NotFound} />
 </Router>, document.getElementById('root')!);

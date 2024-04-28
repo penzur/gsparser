@@ -1,4 +1,5 @@
 import { createResource, Show, Switch, Match } from "solid-js";
+import { Title } from "@solidjs/meta";
 
 import Logs, { LogSummaries } from '../components/logs/Logs';
 import Skeleton from '../components/Skeleton';
@@ -12,9 +13,11 @@ const fetchLogs = async (): Promise<LogSummaries> => {
     return response.json();
 };
 
+
 export default function Home() {
     const [logs] = createResource(fetchLogs);
     return <>
+        <Title>GS Parser - Recent Logs</Title>
         <h1 class="text-5xl w-full p-10 text-center">Recent Logs</h1>
         <Show when={logs.loading}>
             <Skeleton />
