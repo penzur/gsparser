@@ -255,7 +255,7 @@ pub async fn new<D>(mut req: Request, ctx: RouteContext<D>) -> Result<Response> 
     // purge cache
     if let Ok(key) = req.url() {
         let c = Cache::default();
-        if let Ok(_) = c.delete(key.to_string(), true).await {
+        if let Ok(_) = c.delete(key.to_string(), false).await {
             console_log!("Cache purged!");
         } else {
             console_error!("Could not purge cache due to some bitch-ass error!")
