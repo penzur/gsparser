@@ -1,3 +1,5 @@
+import Card from "../Card";
+
 export interface LogSummary {
     date: number;
     server: string;
@@ -23,7 +25,7 @@ function Log(props: LogSummary) {
 
 export default function Logs(props: LogsProp) {
     const logs = () => props.logs;
-    return <div class="border-b-4 border-r-4 border-black">
+    return <Card>
         <div class="bg-black flex text-white text-sm border border-black code">
             <div class="pl-3 pt-1 pb-1 pr-3 flex-1">DATE</div>
             <div class="pl-3 pt-1 pb-1 pr-3 flex-1">SERVER</div>
@@ -31,5 +33,5 @@ export default function Logs(props: LogsProp) {
             <div class="pl-3 pt-1 pb-1 pr-3 flex-1">MVP</div>
         </div>
         {logs().map(l => <Log {...l} />)}
-    </div>;
+    </Card>;
 };

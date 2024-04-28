@@ -2,32 +2,32 @@
 @tailwind components;
 @tailwind utilities;
 
-@font-face {
-    font-family: 'Inconsolata';
-    src: url('/src/assets/fonts/Inconsolata') format('woff2');
-}
+@layer base {
+    @font-face {
+        font-family: 'Inconsolata';
+        src: url('/fonts/Inconsolata.woff2') format('woff2');
+    }
 
-@font-face {
-    font-family: 'Mona Sans';
-    src:
-        url('/src/assets/fonts/Mona-Sans.woff2') format('woff2 supports variations'),
-        url('/src/assets/fonts/Mona-Sans.woff2') format('woff2-variations');
-    font-weight: 200 900;
-    font-stretch: 75% 125%;
-}
-
-html {
-    font-family: 'Mona Sans';
+    @font-face {
+        font-family: 'Mona Sans';
+        src:
+            url('/fonts/Mona-Sans.woff2') format('woff2 supports variations'),
+            url('/fonts/Mona-Sans.woff2') format('woff2-variations');
+        font-weight: 200 900;
+        font-stretch: 75% 125%;
+    }
 }
 
 body {
     margin: 0;
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    font-family: "Mona Sans", -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
         'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
         sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     /* background-image: linear-gradient(135deg, #FFCF71 10%, #2376DD 100%); */
+    background-image: radial-gradient(rgba(0, 0, 0, 0.3) 1px, transparent 0);
+    background-size: 32px 32px;
 
 }
 
@@ -38,4 +38,8 @@ code {
 
 .code {
     font-family: 'Inconsolata', monospace;
+}
+
+.mona {
+    font-family: "Mona Sans";
 }

@@ -1,9 +1,7 @@
 export default function Footer() {
-    return <footer class="p-5 text-center">
-        <p class="flex items-center justify-center code">
-            <small class="tracking-wide">
-                BUILT WITH <span class="text-red-700 text-xl">❤</span> BY <a class="text-blue-700 underline underline-offset-4" href="https://penzur.xyz">@PENZUR</a>
-            </small>
-        </p>
+    return <footer class="text-center w-full flex items-center justify-center">
+        <div class="p-5 code w-1/2 h-full text-sm tracking-wide">
+            BUILT WITH <span class="text-red-700 text-xl">❤</span> BY <a class="font-bold text-blue-700" href="https://penzur.xyz">PENZUR</a>
+        </div>
     </footer>
 };
