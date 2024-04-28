@@ -83,7 +83,11 @@ pub async fn main(req: Request, env: Env, _ctx: worker::Context) -> Result<Respo
             .ok();
         cache_resp
             .headers_mut()
-            .set("Cache-Control", "public, s-max-age=3600")
+            .set("Cache-Control", "public, s-max-age=604800") // 1 week
+            .ok();
+        cache_resp
+            .headers_mut()
+            .set("Cache-Control", "public, max-age=3600") // 1 hour
             .ok();
         c.put(&key, cache_resp).await.ok();
     }
