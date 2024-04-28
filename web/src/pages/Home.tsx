@@ -4,9 +4,6 @@ import Logs, { LogSummaries } from '../components/logs/Logs';
 import Skeleton from '../components/Skeleton';
 
 const fetchLogs = async (): Promise<LogSummaries> => {
-    await new Promise((ok) => {
-        setTimeout(ok, 3000)
-    });
     const response = await fetch('/api/v1/logs');
     return response.json();
 };
