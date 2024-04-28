@@ -252,6 +252,16 @@ pub async fn new<D>(mut req: Request, ctx: RouteContext<D>) -> Result<Response> 
         return Response::error("Request failed", 400);
     }
 
+    // purge cache
+    if let Ok(key) = req.url() {
+        let c = Cache::default();
+        if let Ok(_) = c.delete(key.to_string(), true).await {
+            console_log!("Cache purged!");
+        } else {
+            console_error!("Could not purge cache due to some bitch-ass error!")
+        }
+    }
+
     Response::from_json(&json!({
         "server": server,
         "date": date
