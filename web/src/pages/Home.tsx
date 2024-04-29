@@ -1,4 +1,4 @@
-import { createResource, Show, Switch, Match, createSignal, createEffect } from "solid-js";
+import { createResource, Switch, Match } from "solid-js";
 import { Title } from "@solidjs/meta";
 
 import Logs, { LogSummaries } from '../components/logs/Logs';
@@ -9,7 +9,6 @@ import { A, useParams } from "@solidjs/router";
 
 
 const fetchLogs = async (server?: string): Promise<LogSummaries> => {
-    // await new Promise(ok => setTimeout(ok, 2000));
     let query = '';
     if (server?.length !== 0) {
         query = `?server=${server}`;
@@ -19,7 +18,6 @@ const fetchLogs = async (server?: string): Promise<LogSummaries> => {
 };
 
 const fetchServers = async (): Promise<Array<{ id: string, name: string, private: boolean }>> => {
-    // await new Promise(ok => setTimeout(ok, 2000));
     const response = await fetch('/api/v1/servers');
     return response.json();
 };

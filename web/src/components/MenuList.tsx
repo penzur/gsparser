@@ -14,7 +14,7 @@ export default function MenuList(props: {
                     <A
                         href={`/s/${item.id}`}
                         replace={true}
-                        class={`transition duration-200 hover:bg-blue-100 tracking-widest w-full inline-block p-2 pl-3 border-b border-black ${props.selected === item.id ? 'bg-blue-300 hover:bg-blue-300 border-l border-r ' : ''}`} >
+                        class={`transition duration-200 hover:bg-blue-100 tracking-widest w-full inline-block p-2 pl-3 border-b border-black ${props.selected === item.id ? 'bg-blue-300 hover:bg-blue-300 ' : ''}`} >
                         {item.name}
                     </A>
                 </li>}
