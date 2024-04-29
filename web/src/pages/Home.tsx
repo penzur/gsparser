@@ -18,7 +18,9 @@ export default function Home() {
     const [logs] = createResource(fetchLogs);
     return <>
         <Title>GS Parser - Recent Logs</Title>
-        <h1 class="text-5xl w-full p-10 text-center">Recent Logs</h1>
+        <h1 class="text-3xl w-full p-10 md:p-20 text-center sm:text-4xl md:text-5xl lg:text-5xl">
+            Recent Logs
+        </h1>
         <Show when={logs.loading}>
             <Skeleton />
         </Show>
@@ -36,7 +38,19 @@ export default function Home() {
                 </div>
             </Match>
             <Match when={logs()}>
-                <Logs logs={logs()!} />
+                <div class="flex md:flex-row w-full flex-col">
+                    <div class="md:w-1/3 md:mr-6 sm:w-full mb-6">
+                        <Card class="p-4">
+                            <h3 class="font-light tracking-wider text-2xl mb-4">Server List</h3>
+                            <ul>
+                                <li><a href="/">All</a></li>
+                                <li><a href=""></a></li>
+                                <li><a href=""></a></li>
+                            </ul>
+                        </Card>
+                    </div>
+                    <Logs logs={logs()!} />
+                </div>
             </Match>
         </Switch>
     </>;

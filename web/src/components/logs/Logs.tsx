@@ -19,9 +19,9 @@ const months = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', '
 
 function Log(props: LogSummary) {
     const date = new Date(props.date);
-    return <Card class="code border-2 mb-4 shadow-blue-300 hover:bg-yellow-100 hover:shadow-black transition duration-200">
+    return <Card class="code border mb-4 shadow-blue-300 hover:bg-yellow-100 hover:shadow-black transition duration-200">
         <A href="/">
-            <span class="p-1 pl-3 bg-yellow-300 flex text-black text-sm border-b-2 border-black uppercase tracking-widest">
+            <span class="p-1 pl-3 bg-yellow-300 flex text-black text-sm border-b border-black uppercase tracking-widest">
                 {props.server_name}
             </span>
             <span class="flex">
@@ -66,7 +66,7 @@ function Log(props: LogSummary) {
 
 export default function Logs(props: LogsProp) {
     const logs = () => props.logs;
-    return <>
+    return <div class="w-full">
         {logs().map(l => <Log {...l} />)}
-    </>;
+    </div>;
 };
