@@ -1,57 +1,83 @@
-import { createResource, Show, Switch, Match } from "solid-js";
+import { createResource, Show, Switch, Match, createSignal, createEffect } from "solid-js";
 import { Title } from "@solidjs/meta";
 
 import Logs, { LogSummaries } from '../components/logs/Logs';
 import Skeleton from '../components/Skeleton';
 import Card from '../components/Card';
+import MenuList from "../components/MenuList";
+import { A, useParams } from "@solidjs/router";
 
-const fetchLogs = async (): Promise<LogSummaries> => {
-    // await new Promise((ok) => {
-    //     setTimeout(ok, 5000);
-    // })
-    const response = await fetch('/api/v1/logs');
+
+const fetchLogs = async (server?: string): Promise<LogSummaries> => {
+    // await new Promise(ok => setTimeout(ok, 2000));
+    let query = '';
+    if (server?.length !== 0) {
+        query = `?server=${server}`;
+    }
+    const response = await fetch(`/api/v1/logs${query}`);
     return response.json();
 };
 
+const fetchServers = async (): Promise<Array<{ id: string, name: string, private: boolean }>> => {
+    // await new Promise(ok => setTimeout(ok, 2000));
+    const response = await fetch('/api/v1/servers');
+    return response.json();
+};
 
 export default function Home() {
-    const [logs] = createResource(fetchLogs);
+    const params = useParams();
+    const selectedServer = () => params.server || '';
+    const [logs] = createResource(selectedServer, fetchLogs);
+    const [servers] = createResource(fetchServers);
+
+    const serverName = () => {
+        if (servers() && selectedServer()) {
+            return servers()?.find(s => s.id === selectedServer())?.name;
+        }
+        return 'Recent';
+    };
+
     return <>
-        <Title>GS Parser - Recent Logs</Title>
-        <h1 class="text-3xl w-full p-10 md:p-20 text-center sm:text-4xl md:text-5xl lg:text-5xl">
-            Recent Logs
-        </h1>
-        <Show when={logs.loading}>
-            <Skeleton />
-        </Show>
+        <Title>GS Parser - {serverName()} Siege Logs</Title>
         <Switch>
-            <Match when={logs.error}>
-                <Card class="p-10">
-                    Error fetching logs. Try again later.
-                </Card>
-            </Match>
-            <Match when={logs()?.length === 0}>
-                <div class="flex flex-grow h-full items-center justify-center">
-                    <Card class="p-10">
-                        No log at the moment. Try again later.
-                    </Card>
+            <Match when={servers.loading || logs.loading}>
+                <div class="text-3xl w-full pb-10 pt-10 md:pb-20 md:pt-20 text-center sm:text-4xl md:text-5xl lg:text-5xl">
+                    <Skeleton count={1} />
                 </div>
             </Match>
-            <Match when={logs()}>
-                <div class="flex md:flex-row w-full flex-col">
-                    <div class="md:w-1/3 md:mr-6 sm:w-full mb-6">
-                        <Card class="p-4">
-                            <h3 class="font-light tracking-wider text-2xl mb-4">Server List</h3>
-                            <ul>
-                                <li><a href="/">All</a></li>
-                                <li><a href=""></a></li>
-                                <li><a href=""></a></li>
-                            </ul>
-                        </Card>
-                    </div>
-                    <Logs logs={logs()!} />
-                </div>
+            <Match when={serverName()}>
+                <h1 class="text-3xl w-full p-10 md:p-20 text-center sm:text-4xl md:text-5xl lg:text-5xl">
+                    {serverName()} Siege Logs
+                </h1>
             </Match>
         </Switch>
+        <div class="flex md:flex-row w-full flex-col">
+            <div class="md:w-1/3 md:mr-6 sm:w-full mb-6">
+                <Switch>
+                    <Match when={servers.loading || logs.loading}>
+                        <Skeleton count={3} />
+                    </Match>
+                    <Match when={servers()}>
+                        <MenuList items={servers()} selected={selectedServer()} />
+                    </Match>
+                </Switch>
+            </div>
+            <Switch>
+                <Match when={logs.loading}>
+                    <Skeleton />
+                </Match>
+                <Match when={logs()?.length === 0}>
+                    <Card class="w-full uppercase text-sm flex flex-col items-center justify-center p-10">
+                        <h3 class="font-light block text-2xl mb-6">No Logs Found</h3>
+                        <p class="code text-gray-400">
+                            Come back later or <A href="/upload" class="tracking-widest font-bold text-blue-700 underline underline-offset-8">upload</A> a new one.
+                        </p>
+                    </Card>
+                </Match>
+                <Match when={logs()}>
+                    <Logs logs={logs()!} />
+                </Match>
+            </Switch>
+        </div>
     </>;
 };

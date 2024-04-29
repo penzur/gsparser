@@ -7,7 +7,7 @@ export default function Header() {
                 <A href="/" class="font-black text-3xl lg:text-4xl text-black">gsparser</A>
             </nav>
             <div class="flex-1 flex items-center justify-end">
-                <A href="/submit" class="p-1 text-sm lg:text-lg font-bold pl-4 pr-4 border-2 bg-blue-300 border-black hover:shadow-[4px_4px_0px_rgba(0,0,0,1)] transition duration-200">
+                <A href="/upload" class="p-1 text-sm lg:text-lg font-bold pl-4 pr-4 border-2 bg-blue-300 border-black hover:shadow-[4px_4px_0px_rgba(0,0,0,1)] transition duration-200">
                     Upload <span class="sm:inline-block hidden">log</span>
                 </A>
             </div>
