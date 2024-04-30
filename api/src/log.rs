@@ -157,6 +157,18 @@ pub async fn from_bytes(bytes: &[u8]) -> Result<Log<Vec<Guild>, Vec<Player>>> {
         if !guild.members.contains(&entry.attacker.name) {
             guild.members.push(entry.attacker.name.clone());
         }
+
+        let guild = guild_map
+            .entry(entry.target.guild.clone())
+            .or_insert(Guild {
+                name: entry.target.guild.clone(),
+                points: 0,
+                resu: 0,
+                members: Vec::new(),
+            });
+        if !guild.members.contains(&entry.target.name) {
+            guild.members.push(entry.target.name.clone());
+        }
     }
 
     let mut players = player_map
