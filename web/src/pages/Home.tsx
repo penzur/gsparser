@@ -1,4 +1,4 @@
-import { createResource, Switch, Match } from "solid-js";
+import { createResource, Switch, Match, Show } from "solid-js";
 import { Title } from "@solidjs/meta";
 
 import Logs, { LogSummaries } from '../components/logs/Logs';
@@ -29,14 +29,11 @@ export default function Home() {
     const [servers] = createResource(fetchServers);
 
     const serverName = () => {
-        if (servers() && selectedServer()) {
-            return servers()?.find(s => s.id === selectedServer())?.name;
-        }
-        return 'Recent';
+        return servers()?.find(s => s.id === selectedServer())?.name || 'Recent';
     };
 
     return <>
-        <Title>GS Parser - {serverName()} Siege Logs</Title>
+        <Title><>gsparser - {serverName} Siege Logs</></Title>
         <Switch>
             <Match when={servers.loading || logs.loading}>
                 <div class="text-3xl w-full pb-10 pt-10 md:pb-20 md:pt-20 text-center sm:text-4xl md:text-5xl lg:text-5xl">
