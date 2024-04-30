@@ -85,7 +85,7 @@ export default function Log() {
                                         </span>
                                         <span class="text-xs opacity-70 uppercase sm:text-sm">
                                             <small>
-                                                {g.members.length} SCORERS
+                                                {g.members.length} PLAYERS
                                             </small>
                                         </span>
                                     </span>
