@@ -6,7 +6,7 @@ import Footer from "./Footer";
 
 import { MetaProvider } from '@solidjs/meta';
 const App: Component<RouteSectionProps> = (props) => {
-    return <MetaProvider><div class="flex flex-col h-screen items-center">
+    return <MetaProvider><div class="flex flex-col min-h-screen h-auto items-center">
         <Header />
         <main class="flex-grow w-10/12 lg:w-2/3 xl:w-1/2">
             {props.children}

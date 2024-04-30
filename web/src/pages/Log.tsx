@@ -1,13 +1,13 @@
 import { Title } from "@solidjs/meta";
 import Icon from "../components/Icon";
 import Card from "../components/Card";
-import { For, Match, Switch, createResource } from "solid-js";
+import { For, Match, Show, Switch, createResource, createSignal } from "solid-js";
 import { useParams } from "@solidjs/router";
-
 type Entry = {
     guild: string;
     name: string;
-};
+}
+    ;
 type Player = {
     deaths: Entry[];
     guild: string;
@@ -16,12 +16,14 @@ type Player = {
     points: number;
     resu: number;
 };
+
 type Guild = {
     members: string[];
     name: string;
     points: number;
     resu: number;
 };
+
 interface LogEntry {
     date: number;
     guilds: Guild[];
@@ -38,40 +40,52 @@ const getLog = async (args: logInput): Promise<LogEntry> => {
     return resp.json() as Promise<LogEntry>;
 }
 export default function Log() {
+    const [guildIdx, setGuildIdx] = createSignal();
+    const [playerIdx, setPlayerIdx] = createSignal();
     const params = useParams();
     const server = () => ({ server: params.server, date: params.date });
     const [entry] = createResource(server, getLog);
     return <>
         <Title>gsparser - Log</Title>
+
         <h1 class="text-3xl w-full font-extralight p-10 md:p-20 text-center sm:text-4xl md:text-5xl lg:text-5xl">
             {new Date(entry()?.date as number).toLocaleString().split(',')[0]}
         </h1>
+
         <div class="flex flex-col sm:flex-row w-full">
             <div class="flex-1 mb-4 sm:mr-4">
                 <For each={entry()?.guilds}>
                     {((g, i) => {
-                        return <Card class="overflow-x-hidden group code border mb-2 shadow-black hover:bg-green-50 hover:shadow-green-300 transition duration-200">
+                        return <Card onClick={(e: MouseEvent) => {
+                            e.preventDefault();
+                            setGuildIdx(() => {
+                                if (g.name === guildIdx()) {
+                                    return undefined;
+                                }
+                                return g.name;
+                            });
+                        }} class={`cursor-pointer overflow-x-hidden group code border mb-2 ${guildIdx() === g.name ? 'bg-black text-white shadow-green-300' : ' bg-white hover:bg-green-50 hover:shadow-green-300'} transition duration-200`}>
                             <span class="flex">
-                                <span class="border-r border-black p-3 flex-col flex items-center justify-center w-10">
+                                <span class={`border-r ${guildIdx() === g.name ? 'border-white' : 'border-black'} p-3 flex-col flex items-center justify-center w-10`}>
                                     <Switch>
                                         <Match when={i() === 0}>
                                             <span class="inline-block absolute w-6">
-                                                <Icon name="crown" />
+                                                <Icon name="crown" color={g.name === guildIdx() ? '#FFFFFF' : '#000000'} />
                                             </span>
                                         </Match>
                                         <Match when={i() > 0}>
-                                            <p class="text-center text-xs text-black sm:text-sm"><span>{i() + 1}</span></p>
+                                            <p class={`text-center text-xs ${guildIdx() === g.name ? 'text-white' : 'text-black'} sm:text-sm`}><span>{i() + 1}</span></p>
                                         </Match>
                                     </Switch>
                                 </span>
                                 <span class="flex-grow flex flex-row">
-                                    <span class="flex flex-col p-3 text-xs sm:text-sm flex-1">
-                                        <span class="truncate font-bold">
+                                    <span class="flex truncate flex-col p-3 text-xs sm:text-sm flex-1">
+                                        <span class="md:whitespace-normal font-bold title={g.name}">
                                             {g.name}
                                         </span>
                                         <span class="text-xs opacity-70 uppercase sm:text-sm">
                                             <small>
-                                                {g.members.length} PLAYERS
+                                                {g.members.length} SCORERS
                                             </small>
                                         </span>
                                     </span>
@@ -97,37 +111,47 @@ export default function Log() {
                     })}
                 </For>
             </div>
+
             <div class="flex-1">
-                <For each={entry()?.players}>
-                    {((g, i) => {
-                        return <Card class="overflow-x-hidden group code border mb-2 shadow-black hover:bg-green-50 hover:shadow-green-300 transition duration-200">
+                <For each={entry()?.players.filter(p => {
+                    if (!guildIdx()) { return true; }
+                    return guildIdx() === p.guild;
+                })}>
+                    {((p, i) => {
+                        return <Card onClick={(e) => {
+                            e.preventDefault();
+                            setPlayerIdx((idx) => {
+                                if (idx === p.name) { return undefined; }
+                                return p.name;
+                            });
+                        }} class="cursor-pointer bg-white overflow-x-hidden group code border mb-2 shadow-black hover:bg-green-50 hover:shadow-green-300 transition duration-200">
                             <span class="flex">
                                 <span class="border-r border-black p-3 flex-col flex items-center justify-center w-10">
                                     <Switch>
-                                        <Match when={i() === 0}>
+                                        <Match when={p.name === entry()?.players[0].name}>
                                             <span class="inline-block absolute w-6">
                                                 <Icon name="medal" />
                                             </span>
                                         </Match>
-                                        <Match when={i() > 0}>
+                                        <Match when={i() > 0 || p.name !== entry()?.players[0].name}>
                                             <p class="text-center text-xs text-black sm:text-sm"><span>{i() + 1}</span></p>
                                         </Match>
                                     </Switch>
                                 </span>
                                 <span class="flex-grow flex flex-row">
                                     <span class="flex flex-col p-3 text-xs sm:text-sm flex-1">
-                                        <span class="truncate md:max-w-30 max-w-20 font-bold">
-                                            {g.name}
+                                        <span class="font-bold max-w-20 truncate" title={p.name}>
+                                            {p.name}
                                         </span>
-                                        <span class="text-xs opacity-70 uppercase truncate md:max-w-30 smax-w-20 m:text-sm">
+                                        <span class="text-xs opacity-70 uppercase sm:text-sm truncate max-w-20">
                                             <small>
-                                                {g.guild}
+                                                {p.guild}
                                             </small>
                                         </span>
                                     </span>
                                     <span class="flex flex-col text-xs sm:text-sm justify-center w-9">
                                         <span class="">
-                                            {g.points}
+                                            {p.points}
                                         </span>
                                         <span class="text-xs opacity-70 uppercase sm:text-sm">
                                             <small>PTS</small>
@@ -135,7 +159,7 @@ export default function Log() {
                                     </span>
                                     <span class="flex flex-col text-xs sm:text-sm justify-center w-9">
                                         <span class="">
-                                            {g.kills.reduce((s: any, n: any) => s.concat(n), []).length}
+                                            {p.kills.reduce((s: any, n: any) => s.concat(n), []).length}
                                         </span>
                                         <span class="text-xs opacity-70 uppercase sm:text-sm">
                                             <small>K</small>
@@ -143,7 +167,7 @@ export default function Log() {
                                     </span>
                                     <span class="flex flex-col text-xs sm:text-sm justify-center w-9">
                                         <span class="">
-                                            {g.deaths.length}
+                                            {p.deaths.length}
                                         </span>
                                         <span class="text-xs opacity-70 uppercase sm:text-sm">
                                             <small>D</small>
@@ -151,7 +175,7 @@ export default function Log() {
                                     </span>
                                     <span class="flex flex-col text-xs sm:text-sm justify-center w-9">
                                         <span class="">
-                                            {g.resu}
+                                            {p.resu}
                                         </span>
                                         <span class="text-xs opacity-70 uppercase sm:text-sm">
                                             <small>RES</small>
@@ -159,6 +183,11 @@ export default function Log() {
                                     </span>
                                 </span>
                             </span>
+                            <Show when={playerIdx() === p.name}>
+                                <span class="flex bg-black h-1/4">
+                                    asdds
+                                </span>
+                            </Show>
                         </Card>
                     })}
                 </For>

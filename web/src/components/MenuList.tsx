@@ -6,7 +6,7 @@ export default function MenuList(props: {
     items?: Array<{ id: string, name: string, private: boolean }>,
     selected: string,
 }) {
-    return <Card class="p-4 h-auto">
+    return <Card class="p-4 h-auto bg-red-100">
         <h3 class="font-medium text-lg md:text-2xl mb-4">Server List</h3>
         <ul class="border-t border-black">
             <For each={props.items}>

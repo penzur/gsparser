@@ -21,7 +21,7 @@ const months = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', '
 
 function Log(props: LogSummary) {
     const date = new Date(props.date);
-    return <Card class="group code border mb-4 shadow-black hover:bg-green-50 hover:shadow-green-300 transition duration-200">
+    return <Card class="bg-white group code border mb-4 shadow-black hover:bg-green-50 hover:shadow-green-300 transition duration-200">
         <A href={`/s/${props.server}/d/${props.date}`}>
             <span class="transition duration-200 group-hover:bg-green-300 group-hover:text-black p-1 pl-3 bg-black flex text-white text-xs sm:text-sm border-b border-black uppercase tracking-widest">
                 {props.server_name}
