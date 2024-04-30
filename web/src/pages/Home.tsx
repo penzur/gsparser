@@ -1,4 +1,4 @@
-import { createResource, Switch, Match, Show } from "solid-js";
+import { createResource, Switch, Match } from "solid-js";
 import { Title } from "@solidjs/meta";
 
 import Logs, { LogSummaries } from '../components/logs/Logs';
