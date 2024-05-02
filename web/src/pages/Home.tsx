@@ -63,10 +63,7 @@ export default function Home() {
                 </Match>
                 <Match when={logs()?.length === 0}>
                     <Card class="bg-white w-full uppercase text-sm flex flex-col items-center justify-center p-10">
-                        <h3 class="font-light block text-2xl mb-6">No Logs Found</h3>
-                        <p class="code text-gray-400">
-                            Come back later or <A href="/upload" class="tracking-widest font-bold text-blue-700 underline underline-offset-8">upload</A> a new one.
-                        </p>
+                        <h3 class="font-light block text-2xl opacity-50">No Logs Found</h3>
                     </Card>
                 </Match>
                 <Match when={logs()}>
