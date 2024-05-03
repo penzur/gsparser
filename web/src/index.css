@@ -43,3 +43,7 @@ code {
 .mona {
     font-family: "Mona Sans";
 }
+
+*:focus {
+    outline: none;
+}

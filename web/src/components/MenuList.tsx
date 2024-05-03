@@ -12,7 +12,7 @@ export default function MenuList(props: {
             <For each={props.items}>
                 {(item) => <li class="inline-block w-full text-sm sm:text-base">
                     <A
-                        href={`/s/${item.id}`}
+                        href={`/${item.id}`}
                         replace={true}
                         class={`font-bold code transition duration-200 hover:text-green-300 tracking-wider w-full inline-block p-2 pl-3 border-b border-black ${props.selected === item.id ? 'bg-black text-green-300' : ''}`} >
                         {item.name}
