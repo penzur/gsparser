@@ -54,3 +54,12 @@ export const fetchServers = async (): Promise<Array<{ id: string, name: string, 
     const response = await fetch('/api/v1/servers');
     return response.json();
 };
+
+export const uploadLog = async (data: FormData): Promise<any> => {
+    const response = await fetch('/api/v1/logs', {
+        method: 'POST',
+        body: data,
+    });
+    return response.json();
+};
+
