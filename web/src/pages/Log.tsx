@@ -72,8 +72,6 @@ export default function Log() {
             </Match>
         </Switch>
 
-
-
         <Show when={!entry()}>
             <div class="flex flex-col md:flex-row w-full">
                 <div class="flex flex-1 md:mr-4"><Skeleton count={10} /></div>
@@ -223,7 +221,7 @@ export default function Log() {
 
                                 <Show when={playerIdx() === p.name}>
                                     <span class="flex flex-col bg-gray-700 p-4 text-xs sm:text-sm">
-                                        <span class="flex w-full text-gray-400 mb-2">
+                                        <span class="flex w-full text-white tracking-widest mb-2">
                                             <small class="flex flex-1">
                                                 KILLS
                                             </small>
@@ -235,18 +233,18 @@ export default function Log() {
                                             <span class="flex flex-col flex-1 mr-4">
                                                 <For each={p.kills[0]}>
                                                     {(p => <>
+                                                        <hr class="opacity-10 mt-2 mb-2" />
                                                         <strong>{p.name}</strong>
                                                         <small class="opacity-50">{p.guild}</small>
-                                                        <hr class="opacity-10 mt-2 mb-2" />
                                                     </>)}
                                                 </For>
                                             </span>
                                             <span class="flex flex-col flex-1">
                                                 <For each={p.deaths}>
                                                     {(p => <>
+                                                        <hr class="opacity-10 mt-2 mb-2" />
                                                         <strong>{p.name}</strong>
                                                         <small class="opacity-50">{p.guild}</small>
-                                                        <hr class="opacity-10 mt-2 mb-2" />
                                                     </>)}
                                                 </For>
                                             </span>
