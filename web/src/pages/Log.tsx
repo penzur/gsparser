@@ -119,10 +119,16 @@ export default function Log() {
                         {((p, i) => {
                             return <Card onClick={(e) => {
                                 e.preventDefault();
+                                const ct = e.currentTarget.previousSibling as Element;
                                 setPlayerIdx((idx) => {
                                     if (idx === p.name) { return undefined; }
                                     return p.name;
                                 });
+                                if (ct) {
+                                    setTimeout(() => {
+                                        ct.scrollIntoView({ behavior: 'smooth' });
+                                    }, 500);
+                                }
                             }} class={`${playerIdx() === p.name ? 'bg-black text-white shadow-green-300' : 'shadow-black hover:bg-green-50 hover:shadow-green-300'} cursor-pointer bg-white overflow-x-hidden group code border mb-2 transition duration-200`}>
                                 <span class="flex">
                                     <span class={`border-r p-3 flex-col flex items-center justify-center w-10 ${playerIdx() === p.name ? 'bg-black border-gray-600' : 'border-black '}`}>
