@@ -4,53 +4,20 @@ import Card from "../components/Card";
 import { For, Match, Show, Switch, createResource, createSignal } from "solid-js";
 import { useParams } from "@solidjs/router";
 import Skeleton from '../components/Skeleton';
+import { LogEntry, fetchServers, logInput } from "../services/log";
 
-type Entry = {
-    guild: string;
-    name: string;
-}
-    ;
-type Player = {
-    deaths: Entry[];
-    guild: string;
-    kills: Entry[][];
-    name: string;
-    points: number;
-    resu: number;
-};
-
-type Guild = {
-    members: string[];
-    name: string;
-    points: number;
-    resu: number;
-};
-
-interface LogEntry {
-    date: number;
-    guilds: Guild[];
-    players: Player[];
-    server: string;
-};
-
-type logInput = {
-    server: string;
-    date: string;
-}
 const fetchLog = async (args: logInput): Promise<LogEntry> => {
     const resp = await fetch(`/api/v1/logs/${args.server}/${args.date}`);
     return resp.json() as Promise<LogEntry>;
 }
 
-const fetchServers = async (): Promise<Array<{ id: string, name: string, private: boolean }>> => {
-    const response = await fetch('/api/v1/servers');
-    return response.json();
-};
 export default function Log() {
-    const [guildIdx, setGuildIdx] = createSignal();
-    const [playerIdx, setPlayerIdx] = createSignal();
     const params = useParams();
     const args = () => ({ server: params.server, date: params.date });
+
+    const [guildIdx, setGuildIdx] = createSignal();
+    const [playerIdx, setPlayerIdx] = createSignal();
+
     const [entry] = createResource(args, fetchLog);
     const [servers] = createResource(fetchServers);
 
@@ -61,10 +28,11 @@ export default function Log() {
 
         <Switch>
             <Match when={entry()}>
-                <h1 class="text-3xl w-full font-extralight p-10 md:p-20 text-center sm:text-4xl md:text-5xl lg:text-5xl">
-                    {selectedServer()} <span class="opacity-20">|</span> {new Date(entry()?.date as number).toLocaleString().split(',')[0]}
+                <h1 class="flex flex-col text-3xl w-full p-10 md:p-20 font-extralight text-center sm:text-4xl md:text-5xl lg:text-5xl">
+                    <span>{selectedServer()}</span><span class="code font-bold sm:mt-2 text-lg sm:text-3xl">{new Date(entry()?.date as number).toLocaleString().split(',')[0].replace(/\//g, '.')} </span>
                 </h1>
             </Match>
+
             <Match when={!entry()}>
                 <div class="text-3xl w-full font-extralight p-10 md:p-20 text-center sm:text-4xl md:text-5xl lg:text-5xl">
                     <Skeleton count={1} />
@@ -78,6 +46,7 @@ export default function Log() {
                 <div class="flex flex-1"><Skeleton count={10} /></div>
             </div>
         </Show>
+
         <Show when={entry()}>
             <div class="flex flex-col md:flex-row w-full">
                 <div class="flex-1 mb-6 md:mr-4">
@@ -174,6 +143,7 @@ export default function Log() {
                                             <span class="font-bold truncate max-w-24 lg:max-w-40" title={p.name}>
                                                 {p.name}
                                             </span>
+
                                             <span class="text-xs opacity-70 uppercase sm:text-sm truncate max-w-20">
                                                 <small>
                                                     {p.guild}
@@ -185,6 +155,7 @@ export default function Log() {
                                             <span class="">
                                                 {p.points}
                                             </span>
+
                                             <span class="text-xs opacity-70 uppercase sm:text-sm">
                                                 <small>PTS</small>
                                             </span>
@@ -194,6 +165,7 @@ export default function Log() {
                                             <span class="">
                                                 {p.kills.reduce((s: any, n: any) => s.concat(n), []).length}
                                             </span>
+
                                             <span class="text-xs opacity-70 uppercase sm:text-sm">
                                                 <small>K</small>
                                             </span>
@@ -203,6 +175,7 @@ export default function Log() {
                                             <span class="">
                                                 {p.deaths.length}
                                             </span>
+
                                             <span class="text-xs opacity-70 uppercase sm:text-sm">
                                                 <small>D</small>
                                             </span>
@@ -212,6 +185,7 @@ export default function Log() {
                                             <span class="">
                                                 {p.resu}
                                             </span>
+
                                             <span class="text-xs opacity-70 uppercase sm:text-sm">
                                                 <small>RES</small>
                                             </span>
@@ -225,10 +199,12 @@ export default function Log() {
                                             <small class="flex flex-1">
                                                 KILLS
                                             </small>
+
                                             <small class="flex flex-1 ml-4">
                                                 DEATHS
                                             </small>
                                         </span>
+
                                         <span class="flex w-full text-white max-h-1/3">
                                             <span class="flex flex-col flex-1 mr-4">
                                                 <For each={p.kills[0]}>
@@ -239,6 +215,7 @@ export default function Log() {
                                                     </>)}
                                                 </For>
                                             </span>
+
                                             <span class="flex flex-col flex-1">
                                                 <For each={p.deaths}>
                                                     {(p => <>
