@@ -19,6 +19,6 @@ export default function Skeleton(props: { count?: number }) {
                 </div>
             }
         </For>
-        <span class="sr-only">Loading...</span>
+        <div class="sr-only">Loading...</div>
     </div>;
 }

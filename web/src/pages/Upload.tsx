@@ -26,7 +26,7 @@ export default function Upload() {
                     <Skeleton count={1} />
                 </Match>
                 <Match when={servers()}>
-                    <span>Upload Log</span>
+                    <div>Upload Log</div>
                 </Match>
             </Switch>
         </h1>

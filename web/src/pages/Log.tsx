@@ -4,7 +4,7 @@ import Card from "../components/Card";
 import { For, Match, Show, Switch, createResource, createSignal } from "solid-js";
 import { useParams } from "@solidjs/router";
 import Skeleton from '../components/Skeleton';
-import { LogEntry, Entry, fetchServers, logInput } from "../services/log";
+import { LogEntry, fetchServers, logInput } from "../services/log";
 
 const fetchLog = async (args: logInput): Promise<LogEntry> => {
     const resp = await fetch(`/api/v1/logs/${args.server}/${args.date}`);
@@ -23,13 +23,15 @@ export default function Log() {
 
     const selectedServer = () => servers()?.find(s => s.id === params.server)?.name;
 
+    const date = () => new Date(entry()?.date as number).toLocaleString().split(',')[0].replace(/\//g, '.');
+
     return <>
-        <Title>gsparser - <>{selectedServer}</> - Log</Title>
+        <Title>gsparser - <>{selectedServer} | {date}</></Title>
 
         <Switch>
             <Match when={entry()}>
                 <h1 class="flex flex-col text-3xl w-full p-10 md:p-20 font-extralight text-center sm:text-4xl md:text-5xl lg:text-5xl">
-                    <span>{selectedServer()}</span><span class="code font-bold sm:mt-2 text-lg sm:text-3xl">{new Date(entry()?.date as number).toLocaleString().split(',')[0].replace(/\//g, '.')} </span>
+                    <div>{selectedServer()}</div><div class="code font-bold sm:mt-2 text-lg sm:text-3xl">{date()}</div>
                 </h1>
             </Match>
 
@@ -61,51 +63,51 @@ export default function Log() {
                                     return g.name;
                                 });
                             }} class={`cursor-pointer overflow-x-hidden group code border mb-2 ${guildIdx() === g.name ? 'bg-black text-white shadow-green-300' : ' bg-white hover:bg-green-50 hover:shadow-green-300'} transition duration-200`}>
-                                <span class="flex">
-                                    <span class={`border-r ${guildIdx() === g.name ? 'border-gray-600' : 'border-black'} p-3 flex-col flex items-center justify-center w-10`}>
+                                <div class="flex">
+                                    <div class={`border-r ${guildIdx() === g.name ? 'border-gray-600' : 'border-black'} p-3 flex-col flex items-center justify-center w-10`}>
                                         <Switch>
                                             <Match when={i() === 0}>
-                                                <span class="inline-block absolute w-6">
+                                                <div class="inline-block absolute w-6">
                                                     <Icon name="crown" color={g.name === guildIdx() ? '#FFFFFF' : '#000000'} />
-                                                </span>
+                                                </div>
                                             </Match>
                                             <Match when={i() > 0}>
                                                 <p class={`text-center text-xs ${guildIdx() === g.name ? 'text-white' : 'text-black'} sm:text-sm`}><span>{i() + 1}</span></p>
                                             </Match>
                                         </Switch>
-                                    </span>
+                                    </div>
 
-                                    <span class="flex-grow flex flex-row">
-                                        <span class="flex flex-col p-3 text-sm sm:text-base flex-1">
-                                            <span class="truncate max-w-24 lg:max-w-40 font-bold title={g.name}">
+                                    <div class="flex-grow flex flex-row">
+                                        <div class="flex flex-col p-3 text-sm sm:text-base flex-1">
+                                            <div class="truncate max-w-24 lg:max-w-40 font-bold title={g.name}">
                                                 {g.name}
-                                            </span>
-                                            <span class="text-xs opacity-70 uppercase sm:text-sm">
+                                            </div>
+                                            <div class="text-xs opacity-70 uppercase sm:text-sm">
                                                 <small>
                                                     {g.members.length} PLAYERS
                                                 </small>
-                                            </span>
-                                        </span>
+                                            </div>
+                                        </div>
 
-                                        <span class="flex flex-col text-sm sm:text-base justify-center w-9">
-                                            <span class="">
+                                        <div class="flex flex-col text-sm sm:text-base justify-center w-9">
+                                            <div class="">
                                                 {g.points}
-                                            </span>
-                                            <span class="text-xs opacity-70 uppercase sm:text-sm">
+                                            </div>
+                                            <div class="text-xs opacity-70 uppercase sm:text-sm">
                                                 <small>PTS</small>
-                                            </span>
-                                        </span>
+                                            </div>
+                                        </div>
 
-                                        <span class="flex flex-col text-sm sm:text-base justify-center w-9">
-                                            <span class="">
+                                        <div class="flex flex-col text-sm sm:text-base justify-center w-9">
+                                            <div class="">
                                                 {g.resu}
-                                            </span>
-                                            <span class="text-xs opacity-70 uppercase sm:text-sm">
+                                            </div>
+                                            <div class="text-xs opacity-70 uppercase sm:text-sm">
                                                 <small>RES</small>
-                                            </span>
-                                        </span>
-                                    </span>
-                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
                             </Card>
                         })}
                     </For>
@@ -130,78 +132,78 @@ export default function Log() {
                                     }, 500);
                                 }
                             }} class={`${playerIdx() === p.name ? 'bg-black text-white shadow-green-300' : 'shadow-black hover:bg-green-50 hover:shadow-green-300'} cursor-pointer bg-white overflow-x-hidden group code border mb-2 transition duration-200`}>
-                                <span class="flex">
-                                    <span class={`border-r p-3 flex-col flex items-center justify-center w-10 ${playerIdx() === p.name ? 'bg-black border-gray-600' : 'border-black '}`}>
+                                <div class="flex">
+                                    <div class={`border-r p-3 flex-col flex items-center justify-center w-10 ${playerIdx() === p.name ? 'bg-black border-gray-600' : 'border-black '}`}>
                                         <Switch>
                                             <Match when={p.name === entry()?.players[0].name}>
-                                                <span class="inline-block absolute w-6">
+                                                <div class="inline-block absolute w-6">
                                                     <Icon name="medal" color={`${playerIdx() === p.name ? '#FFFFFF' : '#000000'}`} />
-                                                </span>
+                                                </div>
                                             </Match>
                                             <Match when={i() > 0 || p.name !== entry()?.players[0].name}>
                                                 <p class={`text-center text-sm sm:text-base ${playerIdx() === p.name ? 'text-white' : 'text-black'}`}><span>{i() + 1}</span></p>
                                             </Match>
                                         </Switch>
-                                    </span>
+                                    </div>
 
-                                    <span class={`flex-grow flex flex-row ${playerIdx() === p.name ? 'bg-black text-white' : ''}`}>
-                                        <span class="flex flex-col p-3 text-sm sm:text-base flex-1">
-                                            <span class="font-bold truncate max-w-24 lg:max-w-40" title={p.name}>
+                                    <div class={`flex-grow flex flex-row ${playerIdx() === p.name ? 'bg-black text-white' : ''}`}>
+                                        <div class="flex flex-col p-3 text-sm sm:text-base flex-1">
+                                            <div class="font-bold truncate max-w-24 lg:max-w-40" title={p.name}>
                                                 {p.name}
-                                            </span>
+                                            </div>
 
-                                            <span class="text-xs opacity-70 uppercase sm:text-sm truncate max-w-20">
+                                            <div class="text-xs opacity-70 uppercase sm:text-sm truncate max-w-20">
                                                 <small>
                                                     {p.guild}
                                                 </small>
-                                            </span>
-                                        </span>
+                                            </div>
+                                        </div>
 
-                                        <span class="flex flex-col text-sm sm:text-base justify-center w-9">
-                                            <span class="">
+                                        <div class="flex flex-col text-sm sm:text-base justify-center w-9">
+                                            <div class="">
                                                 {p.points}
-                                            </span>
+                                            </div>
 
-                                            <span class="text-xs opacity-70 uppercase sm:text-sm">
+                                            <div class="text-xs opacity-70 uppercase sm:text-sm">
                                                 <small>PTS</small>
-                                            </span>
-                                        </span>
+                                            </div>
+                                        </div>
 
-                                        <span class="flex flex-col text-sm sm:text-base justify-center w-9">
-                                            <span class="">
+                                        <div class="flex flex-col text-sm sm:text-base justify-center w-9">
+                                            <div class="">
                                                 {p.kills.reduce((s: any, n: any) => s.concat(n), []).length}
-                                            </span>
+                                            </div>
 
-                                            <span class="text-xs opacity-70 uppercase sm:text-sm">
+                                            <div class="text-xs opacity-70 uppercase sm:text-sm">
                                                 <small>K</small>
-                                            </span>
-                                        </span>
+                                            </div>
+                                        </div>
 
-                                        <span class="flex flex-col text-sm sm:text-base justify-center w-9">
-                                            <span class="">
+                                        <div class="flex flex-col text-sm sm:text-base justify-center w-9">
+                                            <div class="">
                                                 {p.deaths.length}
-                                            </span>
+                                            </div>
 
-                                            <span class="text-xs opacity-70 uppercase sm:text-sm">
+                                            <div class="text-xs opacity-70 uppercase sm:text-sm">
                                                 <small>D</small>
-                                            </span>
-                                        </span>
+                                            </div>
+                                        </div>
 
-                                        <span class="flex flex-col text-sm sm:text-base justify-center w-9">
-                                            <span class="">
+                                        <div class="flex flex-col text-sm sm:text-base justify-center w-9">
+                                            <div class="">
                                                 {p.resu}
-                                            </span>
+                                            </div>
 
-                                            <span class="text-xs opacity-70 uppercase sm:text-sm">
+                                            <div class="text-xs opacity-70 uppercase sm:text-sm">
                                                 <small>RES</small>
-                                            </span>
-                                        </span>
-                                    </span>
-                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
 
                                 <Show when={playerIdx() === p.name}>
-                                    <span class="flex flex-col bg-gray-700 p-4 text-xs sm:text-sm">
-                                        <span class="flex w-full text-white tracking-widest mb-2">
+                                    <div class="flex flex-col bg-gray-700 p-4 text-xs sm:text-sm">
+                                        <div class="flex w-full text-white tracking-widest mb-2">
                                             <small class="flex flex-1 font-bold text-green-300">
                                                 KILLS
                                             </small>
@@ -209,10 +211,10 @@ export default function Log() {
                                             <small class="flex flex-1 ml-4 font-bold text-red-300">
                                                 DEATHS
                                             </small>
-                                        </span>
+                                        </div>
 
-                                        <span class="flex w-full text-white max-h-1/3">
-                                            <span class="flex flex-col flex-1 mr-4">
+                                        <div class="flex w-full text-white max-h-1/3">
+                                            <div class="flex flex-col flex-1 mr-4">
                                                 <For each={p.kills}>
                                                     {((a, i) => <>
                                                         <hr class="opacity-10 mt-2 mb-2" />
@@ -225,9 +227,9 @@ export default function Log() {
                                                         </For>
                                                     </>)}
                                                 </For>
-                                            </span>
+                                            </div>
 
-                                            <span class="flex flex-col flex-1">
+                                            <div class="flex flex-col flex-1">
                                                 <For each={p.deaths}>
                                                     {(p => <>
                                                         <hr class="opacity-10 mt-2 mb-2" />
@@ -235,9 +237,9 @@ export default function Log() {
                                                         <small class="opacity-50">{p.guild}</small>
                                                     </>)}
                                                 </For>
-                                            </span>
-                                        </span>
-                                    </span>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </Show>
                             </Card>
                         })}
