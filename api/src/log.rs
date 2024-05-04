@@ -122,15 +122,8 @@ pub async fn from_bytes(bytes: &[u8]) -> Result<Log<Vec<Guild>, Vec<Player>>> {
                 deaths: Vec::new(),
             });
         attacker.points += entry.points as u32;
-        let aidx = {
-            let len = attacker.kills.len();
-            if len == 0 {
-                attacker.kills.push(Vec::new());
-                0
-            } else {
-                len - 1
-            }
-        };
+        let aidx = attacker.deaths.len();
+        attacker.kills.resize_with(aidx + 1, Vec::new); // Guarantee space
         attacker.kills[aidx].push(entry.target.clone());
 
         let target = player_map
