@@ -4,7 +4,7 @@ import Card from "../components/Card";
 import { For, Match, Show, Switch, createResource, createSignal } from "solid-js";
 import { useParams } from "@solidjs/router";
 import Skeleton from '../components/Skeleton';
-import { LogEntry, fetchServers, logInput } from "../services/log";
+import { LogEntry, Entry, fetchServers, logInput } from "../services/log";
 
 const fetchLog = async (args: logInput): Promise<LogEntry> => {
     const resp = await fetch(`/api/v1/logs/${args.server}/${args.date}`);
@@ -202,22 +202,27 @@ export default function Log() {
                                 <Show when={playerIdx() === p.name}>
                                     <span class="flex flex-col bg-gray-700 p-4 text-xs sm:text-sm">
                                         <span class="flex w-full text-white tracking-widest mb-2">
-                                            <small class="flex flex-1">
+                                            <small class="flex flex-1 font-bold text-green-300">
                                                 KILLS
                                             </small>
 
-                                            <small class="flex flex-1 ml-4">
+                                            <small class="flex flex-1 ml-4 font-bold text-red-300">
                                                 DEATHS
                                             </small>
                                         </span>
 
                                         <span class="flex w-full text-white max-h-1/3">
                                             <span class="flex flex-col flex-1 mr-4">
-                                                <For each={p.kills[0]}>
-                                                    {(p => <>
+                                                <For each={p.kills}>
+                                                    {((a, i) => <>
                                                         <hr class="opacity-10 mt-2 mb-2" />
-                                                        <strong>{p.name}</strong>
-                                                        <small class="opacity-50">{p.guild}</small>
+                                                        <small class="mb-2 text-green-300">LIFE {i() + 1}</small>
+                                                        <For each={a}>
+                                                            {p => <div class="ml-2 flex flex-col max-w-28 mb-2">
+                                                                <strong class="truncate">{p.name}</strong>
+                                                                <small class="opacity-50 truncate">{p.guild}</small>
+                                                            </div>}
+                                                        </For>
                                                     </>)}
                                                 </For>
                                             </span>
